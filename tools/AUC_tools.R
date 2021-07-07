@@ -88,14 +88,14 @@ save_tpr_fpr <- function(dir, order_func, method_name,
                         n_DAGs_total = 1000) {
     if (method_name == "ICP" &
         str_extract(
-            "data/alltargets_2_10_sdw7_sdh9",
+            dir,
             "(?<=alltargets_)[0-9]+(?=_)"
-        ) < 3) {
+        ) %>% as.numeric < 3) {
             cat(sprintf("# Skipping %s
-# (ICP needs min. three obs. per environment)",
+# (ICP needs min. three obs. per environment)\n",
                         dir))
             return(1)
-        }
+    }
 
     res_tib <- tibble()
 
