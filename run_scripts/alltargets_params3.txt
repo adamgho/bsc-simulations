@@ -1,0 +1,7 @@
+n_obs_each num_interv shift_noise_sd sd_hiddens
+10 500 7 6 
+10 500 7 7
+10 500 7 8
+10 500 7 9
+10 500 7 10
+10 500 8 10
