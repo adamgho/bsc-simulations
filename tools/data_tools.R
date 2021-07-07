@@ -2,43 +2,23 @@ library(tidyverse)
 library(igraph)
 library(Matrix)
 
-## These variables set default values for the different intervention settings.
-## If possible, set default values by passing arguments to the relevant
-## simulation functions instead of changing these variables, since it easily
-## leads to confusion.
-
-# Standard deviation of mean shift
-default_shift_noise_sd <- 7
-# num_interv is the total number of different interventions in sim_alltargets
-default_num_interv <- 500
-# n_obs_each is the number of observations to do of each intervention in
-# sim_alltargets
-default_n_obs_each <- 2
-# n_obs is the number of observations of each intervention in singletargets
-# TODO: CHANGE NAME HERE!
-default_n_obs <- 10
-# sd_hiddens is the standard deviation of the hidden variables in both
-# alltargets and singletargets
-default_sd_hiddens <- 5
-
-# Loads list of DAGs
-# DAG_list <- readRDS("data/DAGs1000_nx30_nh30_probconnect04.rds")
-
 # Simulates data from the alltargets setup
 # INPUT:
 # DAG_data determines the DAG, the structural assignment, and which variables
 # are hiddens, X's, and Y.
 # num_interv is the number of environments (i.e different interventions).
-# shift_noise_sd is the sd of the hiddens.
+# shift_noise_sd is the sd of the mean shifts.
 # n_obs_each is the number of observations from each environment (setting this
 # means that all environments have the same number of observations).
+# sd_hiddens is the sd of the hidden variables.
 # n_obs is a vector of the number of observations for each environment; here
 # the i'th entry is the number of observations in the i'th environment.
-sim_alltargets <- function(DAG_data, num_interv = default_num_interv,
-                           shift_noise_sd = default_shift_noise_sd,
-                           n_obs_each = default_n_obs_each,
-                           n_obs = rep(n_obs_each, num_interv),
-                           sd_hiddens = default_sd_hiddens) {
+sim_alltargets <- function(DAG_data,
+                          n_obs_each = 2,
+                          num_interv = 500,
+                          shift_noise_sd = 7,
+                          sd_hiddens = 5,
+                          n_obs = rep(n_obs_each, num_interv)) {
   num_var <- nrow(DAG_data$B)
  
   # The i'th column gives the mean shifts of the X's in the i'th environment
@@ -131,20 +111,6 @@ sim_alltargets_datasets <- function(DAG_list, n_obs_each, num_interv,
     if (dir.exists(dir_complete))  {
         cat(sprintf("!!! WARNING: Dir %s already exists. Skipping this one. !!!\n", dir_complete))
         return(1)
-        # Alternative code for prompting user about whether to 
-        # overwrite existing files in dir.
-        # user_answer <- tolower(readline(sprintf(
-        #     "Dir %s already exists: (o)verwrite or (s)top?> "
-        # ), dir))
-        # if (user_answer == "s") {
-        #     cat("Ok. Stopping.\n")
-        #     return(1)
-        # } else if (user_anwer == "o") {
-        #     cat("Ok. Overwriting files.\n")
-        # } else {
-        #     cat("I don't understand your answer. Stopping.\n")
-        #     return(1)
-        # }
     } else if (dir.exists(dir)) {
         # Finds highest occuring file
         str_extract(list.files(dir), "[0-9]+(?=.rds)") %>%
@@ -183,9 +149,9 @@ sim_alltargets_datasets <- function(DAG_list, n_obs_each, num_interv,
         for (i in 1:n_current_DAGs) {
             cat(sprintf("%d|", i))
             current_DAGs[[i]] <- sim_alltargets(current_DAGs[[i]],
+                                    n_obs_each = n_obs_each,
                                     num_interv = num_interv,
                                     shift_noise_sd = shift_noise_sd,
-                                    n_obs_each = n_obs_each,
                                     sd_hiddens = sd_hiddens)
         }
         saveRDS(current_DAGs, sprintf("%s/%d.rds", dir, file_index))
@@ -221,9 +187,13 @@ sim_alltargets_txt <- function(DAG_list,
   }
 }
 
+
+
 # Simulates alltargets data sets for each DAG in DAG_list
 # for each combination of values in n_obs_each_vec and
 # num_interv_vec.
+# Not currently used (sim_alltargets_txt is used instead), but provides
+# nice functionality for easily simulating a large number of data sets.
 sim_alltargets_grid <- function(DAG_list,
                                 n_obs_each_vec,
                                 num_interv_vec,
@@ -327,54 +297,56 @@ sim_singletargets_half <- function(DAG_data,
   return(DAG_data)
 }
 
-### Not relevant right now
-#
-# # Version of sim_singletargets_all which also includes a control environment
-# # without any intervention.
-# sim_singletargets_all_with_control <- function(DAG_data,
-#                               shift_noise_sd = default_shift_noise_sd,
-#                               n_obs = rep(default_n_obs, times = length(interv)),
-#                               w = rnorm(length(interv), mean = 0, sd = shift_noise_sd)) {
-#   num_var <- nrow(DAG_data$B)
-#   num_interv <- length(interv)
-  
-#   interv_sim <- function(i) {
-#     # rows for variables, columns for repetitions.
-#     N <- matrix(rnorm(n_obs[i] * num_var),
-#                 nrow = num_var,
-#                 ncol = n_obs[i])
-#     N[interv[i], ] <- N[interv[i], ] + rep(w[i], n_obs[i])
-#     X <- solve(diag(num_var) - DAG_data$B) %*% N
-#     rownames(X) <- paste("X", 1:num_var, sep = "")
-#     X %>%
-#       t %>%
-#       as.matrix %>%
-#       as_tibble %>%
-#       mutate(int_var = interv[i])
-#   }
-  
-#   sim_control <- #TODO finish this
-  
-#   # list where i'th entry is simulated data for i'th intervention
-#   sim_list <- lapply(1:num_interv, interv_sim)
-#   # Saves a permutation for each intervention experiment
-#   permutation_list <- lapply(n_obs, function(n) sample(n))
-#   # Permutes the rows of the i'th intervention experiment
-#   permute_experiment <- function(i) sim_list[[i]][permutation_list[[i]], ]
-#   # Applies all permutations to obtain tilde data sets
-#   sim_list_tilde <- lapply(1:num_interv, permute_experiment)
-#   # Collects all rows in one tibble
-#   sim_tib <- do.call(rbind, sim_list)
-#   sim_tib_tilde <- do.call(rbind, sim_list_tilde)
-  
-#   # Returns relevant data
-#   DAG_data$dat_list$dat_singletargets <- list()
-#   DAG_data$dat_list$dat_singletargets$X <- as.matrix(sim_tib[, DAG_data$x])
-#   DAG_data$dat_list$dat_singletargets$Y <- as.matrix(sim_tib[, DAG_data$y])
-#   DAG_data$dat_list$dat_singletargets$X_tilde <- as.matrix(sim_tib_tilde[, DAG_data$x])
-#   DAG_data$dat_list$dat_singletargets$Y_tilde <- as.matrix(sim_tib_tilde[, DAG_data$y])
-#   DAG_data$dat_list$dat_singletargets$w <- w
-#   DAG_data$dat_list$dat_singletargets$setting <- rep(interv, n_obs)
-  
-#   return(DAG_data)
-# }
+### Not done
+
+# Version of sim_singletargets_all which also includes a control environment
+# without any intervention.
+sim_singletargets_with_control <- function(DAG_data,
+                              num_interv_each = default_n_obs_each,
+                              n_obs_each, 
+                              shift_noise_sd = default_shift_noise_sd,
+                              n_obs = rep(default_n_obs, times = length(interv)),
+                              w = rnorm(length(interv), mean = 0, sd = shift_noise_sd)) {
+  num_var <- nrow(DAG_data$B)
+  num_interv <- length(interv)
+
+  interv_sim <- function(i) {
+    # rows for variables, columns for repetitions.
+    N <- matrix(rnorm(n_obs[i] * num_var),
+                nrow = num_var,
+                ncol = n_obs[i])
+    N[interv[i], ] <- N[interv[i], ] + rep(w[i], n_obs[i])
+    X <- solve(diag(num_var) - DAG_data$B) %*% N
+    rownames(X) <- paste("X", 1:num_var, sep = "")
+    X %>%
+      t %>%
+      as.matrix %>%
+      as_tibble %>%
+      mutate(int_var = interv[i])
+  }
+
+  sim_control <- #TODO finish this
+
+  # list where i'th entry is simulated data for i'th intervention
+  sim_list <- lapply(1:num_interv, interv_sim)
+  # Saves a permutation for each intervention experiment
+  permutation_list <- lapply(n_obs, function(n) sample(n))
+  # Permutes the rows of the i'th intervention experiment
+  permute_experiment <- function(i) sim_list[[i]][permutation_list[[i]], ]
+  # Applies all permutations to obtain tilde data sets
+  sim_list_tilde <- lapply(1:num_interv, permute_experiment)
+  # Collects all rows in one tibble
+  sim_tib <- do.call(rbind, sim_list)
+  sim_tib_tilde <- do.call(rbind, sim_list_tilde)
+
+  # Returns relevant data
+  DAG_data$dat <- list()
+  DAG_data$dat$X <- as.matrix(sim_tib[, DAG_data$x])
+  DAG_data$dat$Y <- as.matrix(sim_tib[, DAG_data$y])
+  DAG_data$dat$X_tilde <- as.matrix(sim_tib_tilde[, DAG_data$x])
+  DAG_data$dat$Y_tilde <- as.matrix(sim_tib_tilde[, DAG_data$y])
+  DAG_data$dat$w <- w
+  DAG_data$dat$setting <- rep(interv, n_obs)
+
+  return(DAG_data)
+}
