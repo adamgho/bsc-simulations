@@ -1,4 +1,3 @@
-n_obs_each num_interv shift_noise_sd sd_hiddens
 
 
 
