@@ -219,6 +219,7 @@ sim_singletargets <- function(DAG_data,
   # the X with index interv[i] in the i'th experiment.
   w = rnorm(num_x_interv * n_obs_each, mean = 0, sd = shift_noise_sd)
 
+  # Total number of intervention experiments
   num_experiments <- num_interv_each * num_x_interv
   # The i'th entry is the number of observations of the i'th
   # interventional setting.
@@ -241,8 +242,7 @@ sim_singletargets <- function(DAG_data,
     X %>%
       t %>%
       as.matrix %>%
-      as_tibble %>%
-      mutate(int_var = interv[i])
+      as_tibble
   }
 
   # Simulates control data set. Only difference from the above is that
@@ -256,9 +256,7 @@ sim_singletargets <- function(DAG_data,
   X %>%
     t %>%
     as.matrix %>%
-    as_tibble %>%
-    # int_var == 0 denotes control
-    mutate(int_var = 0) ->
+    as_tibble ->
     control_tib
 
   # list where i'th entry is simulated data for i'th intervention
@@ -295,8 +293,12 @@ sim_singletargets <- function(DAG_data,
   DAG_data$dat$X_tilde <- as.matrix(sim_tib_tilde[, DAG_data$x])
   DAG_data$dat$Y_tilde <- as.matrix(sim_tib_tilde[, DAG_data$y])
   DAG_data$dat$w <- w
-  DAG_data$dat$setting <- rep(1:num_experiments, each = n_obs_each)
-  DAG_data$dat$interv <- interv
+  DAG_data$dat$setting <- c(
+          rep(1:num_experiments, each = n_obs_each), # intervention settings
+          rep(0, n_obs_control) # control setting
+  )
+  # 0 indicates control data set.
+  DAG_data$dat$interv <- c(interv, rep(0, n_obs_control))
 
   return(DAG_data)
 }
