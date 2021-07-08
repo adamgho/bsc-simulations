@@ -78,18 +78,26 @@ get_sim_dirs <- function(sim_type, dir = "data") {
         list.files(dir,
             pattern = str_c("^alltargets_[0-9]+_[0-9]+_sdw[0-9]+_sdh[0-9]+$")
         )
+    } else if (sim_type == "singletargets") {
+        list.files(dir,
+            pattern = str_c("^singletargets_[0-9]+_[0-9]+_[0-9]+_[0-9]+_sdw[0-9]+_sdh[0-9]+$")
+        )
     } else {
-        NULL
+        return(NULL)
     }
 }
 
 # Saves true positive and false positive rates 
 save_tpr_fpr <- function(dir, order_func, method_name,
                         n_DAGs_total = 1000) {
+    # If there are only 2 observations in each environment, then
+    # ICP can't run.
     if (method_name == "ICP" &
         str_extract(
             dir,
-            "(?<=alltargets_)[0-9]+(?=_)"
+            # The number after the first underscore is
+            # the number of observations per environment.
+            "(?<=targets_)[0-9]+(?=_)"
         ) %>% as.numeric < 3) {
             cat(sprintf("# Skipping %s
 # (ICP needs min. three obs. per environment)\n",
@@ -186,7 +194,7 @@ add_missing_tpr_fpr <- function(order_func, method_name,
                                 sim_type = "alltargets",
                                 n_DAGs_total = 1000,
                                 dir = "data") {
-    sim_dirs <- get_sim_dirs(sim_type)
+    sim_dirs <- get_sim_dirs(sim_type, dir)
 
     for (sim_dir in sim_dirs) {
         complete_dir <- str_c(dir, "/", sim_dir)
@@ -316,11 +324,11 @@ collect_AUC <- function(sim_type = "alltargets", dir = "data/") {
     do.call(str_c("collect_AUC_", sim_type), list(dir = dir))
 }
 
-# Collects all AUC from sim directories in dir in
+# Collects all AUC from alltargets directories in dir in
 # a single tibble and saves it in dir.
 # Only works for alltargets with varied 
 collect_AUC_alltargets <- function(dir = "data/") {
-    cat(sprintf("\n### Collecting AUC from %s ###\n", dir))
+    cat(sprintf("\n### Collecting alltargets AUC from %s ###\n", dir))
 
     sim_dirs <- get_sim_dirs("alltargets", dir)
     complete_tib <- tibble()
@@ -357,4 +365,43 @@ collect_AUC_alltargets <- function(dir = "data/") {
     saveRDS(complete_tib, str_c(dir, "/AUC_alltargets.rds"))
 }
 
-# TODO: Write collect_AUC for singletargets
+
+# Collects all AUC from singletargets directories in dir in
+# a single tibble and saves it in dir.
+collect_AUC_singletargets <- function(dir = "data/") {
+    cat(sprintf("\n### Collecting AUC from %s ###\n", dir))
+
+    sim_dirs <- get_sim_dirs("singletargets", dir)
+    complete_tib <- tibble()
+
+    for (sim_dir in sim_dirs) {
+        cat(sprintf("# %-25s", sim_dir))
+        complete_dir <- str_c(dir, "/", sim_dir)
+        AUC_path <- str_c(complete_dir, "/AUC.rds")
+        if (file.exists(AUC_path)) {
+            # Extracts n_obs_each, num_interv, shift_noise_sd, and sd_hiddens 
+            # from the name of the directory.
+            sim_dir %>% 
+                str_extract_all("(?<=(_|sdw|sdh))[0-9]+(?=(_|$))",
+                                simplify = T) %>% 
+                as.numeric ->
+                sim_info
+
+            # Adds the data to complete_tib with columns giving
+            # n_obs_each, num_interv and shift_noise_sd.
+            readRDS(AUC_path) %>% 
+                mutate(n_obs_each = sim_info[1],
+                        num_interv_each = sim_info[2],
+                        num_x_interv = sim_info[3],
+                        n_obs_control = sim_info[4],
+                        shift_noise_sd = sim_info[5],
+                        sd_hiddens = sim_info[6]) %>% 
+                        rbind(complete_tib) ->
+                        complete_tib
+
+            cat("Added\n")
+        } else {
+            cat("No AUC.rds\n")
+        }
+    }
+}
