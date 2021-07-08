@@ -87,7 +87,23 @@ get_sim_dirs <- function(sim_type, dir = "data") {
     }
 }
 
+dir <- "data/alltargets_10_500_sdw7_sdh5"
+order_func <- beta_DPOLS
+method_name <- "DPOLS-coef"
+n_DAGs_total <- 1000
+
 # Saves true positive and false positive rates 
+# Input:
+#   dir: directory of data from a single simulation setup.
+#   order_func: A function taking DAG_data$dat and returning
+#               a vector with a value for each x, where a larger absolute
+#               value means more significant.
+#               OBS: If using p-values, you need to make order_func
+#               return 1 - p_value (so large means significant).
+#               (See one_minus below.)
+#   method_name: String to include in tibble in "method" column.
+#   n_DAGs_total: Total number of DAGs in dir. This is just to
+#                 control that the simulation is completed.
 save_tpr_fpr <- function(dir, order_func, method_name,
                         n_DAGs_total = 1000) {
     # If there are only 2 observations in each environment, then
@@ -138,11 +154,22 @@ save_tpr_fpr <- function(dir, order_func, method_name,
         for (i in 1:n_DAGs) {
             cat(sprintf("%d|", i))
             order_vals <- order_func(DAG_list[[i]]$dat)
-            # Returns X indices ordered by smallest p-value.
-            # Breaks ties randomly
-            x_order <- DAG_list[[i]]$x[order(
-                rank(order_vals, ties.method = "random")
-            )]
+            ## Returns X indices ordered by largest absolute "order" value.
+            ## Breaks ties randomly
+            # rev reverses the vector 
+            x_order <- rev(DAG_list[[i]]$x[
+                # order returns vector where the i'th entry is the
+                # i'th smallest value in order_vals
+                order(
+                    # rank with random tie breaking to avoid ties.
+                    # If just using order_vals (without rank first)
+                    # order wouldn't break ties randomly.
+                    rank(abs(order_vals), ties.method = "random")
+                )
+            ])
+
+            # Selects the first n_select x's in x_order (the n_select most
+            # significant x's) and saves results in res_mat.
             for (n_select in n_selects) {
                 if (n_select == 0) selected <- NULL
                 else selected <- x_order[1:n_select]
@@ -159,6 +186,8 @@ save_tpr_fpr <- function(dir, order_func, method_name,
             }
         }
 
+        # Formats results for this file with method name and DAG_ids and
+        # adds to res_tib
         res_mat %>%
             as_tibble() %>%
             cbind(
@@ -174,6 +203,9 @@ save_tpr_fpr <- function(dir, order_func, method_name,
         cat("Done!\n")
     }
 
+    # Checks whether the total number of DAGs matches the expected number.
+    # If so: Saves results.
+    # If not: Print error message and don't save results.
     if (n_DAGs_processed == n_DAGs_total) {
         cat(sprintf(
             "\n## Done processing all %d DAGs in %s ##\n",
@@ -188,9 +220,147 @@ save_tpr_fpr <- function(dir, order_func, method_name,
     }
 }
 
+# Takes order_func (a function giving p-values from data) and
+# returns a function giving 1 - p_values instead.
+one_minus <- function(order_func) {
+    function(dat) 1 - order_func(dat)
+}
+
 # Runs save_tpr_fpr on all data-directoris in dir that don't already
 # have a file named tpr_fpr_"method_name".rds
 add_missing_tpr_fpr <- function(order_func, method_name,
+                                sim_type = "alltargets",
+                                n_DAGs_total = 1000,
+                                dir = "data") {
+    sim_dirs <- get_sim_dirs(sim_type, dir)
+
+    for (sim_dir in sim_dirs) {
+        complete_dir <- str_c(dir, "/", sim_dir)
+        if (!file.exists(str_c(complete_dir, "/tpr_fpr_",
+                                method_name, ".rds"))) {
+            save_tpr_fpr(complete_dir, order_func, method_name, n_DAGs_total)
+        }
+    }
+}
+
+# Modified version because it took too long to run ICP on all 1000 DAGs.
+# Here n_DAGs is the number of DAGs to process. The function will stop
+# after this.
+save_tpr_fpr_fewer <- function(dir, order_func, method_name,
+                                n_DAGs_to_process) {
+    # If there are only 2 observations in each environment, then
+    # ICP can't run.
+    if (method_name == "ICP" &
+        str_extract(
+            dir,
+            # The number after the first underscore is
+            # the number of observations per environment.
+            "(?<=targets_)[0-9]+(?=_)"
+        ) %>% as.numeric < 3) {
+            cat(sprintf("# Skipping %s
+# (ICP needs min. three obs. per environment)\n",
+                        dir))
+            return(1)
+    }
+
+    res_tib <- tibble()
+
+    # Only files of the form [one or more numbers].rds
+    filenames <- str_sort(list.files(dir, pattern = "^[0-9]+.rds$"),
+        numeric = T
+    )
+
+    cat(sprintf("### %s | to process: %d DAGs | %s ###\n", 
+                dir, n_DAGs_to_process, method_name))
+
+    
+    # Loads the right number of DAGs
+    n_DAGs <- 0
+    DAG_list <- list()
+    file_index <- 1
+    while (n_DAGs < n_DAGs_to_process) {
+        filenames <- filenames[file_index]
+        DAG_list <- c(DAG_list, readRDS(str_c(dir, "/", filename)))
+        n_DAGs <- length(DAG_list)
+        file_index <- file_index + 1
+    }
+    
+    if (n_DAGs != n_DAGs_to_process) {
+        cat("WARNING: Not enough DAGs! Skipping.\n")
+        return(1)
+    }
+
+    DAG_list <- DAG_list[1:n_DAGs_to_process]
+    n_DAGs <- n_DAGs_to_process
+
+    res_mat <- matrix(NA,
+        ncol = 4,
+        nrow = n_DAGs * n_n_selects,
+        dimnames = list(
+            NULL,
+            c(
+                "tpr_anc", "fpr_anc",
+                "tpr_pa", "fpr_pa"
+            ) 
+        )
+    )
+
+    row_start <- 1
+    cat("DAGs processed: ")
+    for (i in 1:n_DAGs) {
+        cat(sprintf("%d|", i))
+        order_vals <- order_func(DAG_list[[i]]$dat)
+        ## Returns X indices ordered by largest absolute "order" value.
+        ## Breaks ties randomly
+        # rev reverses the vector 
+        x_order <- rev(DAG_list[[i]]$x[
+            # order returns vector where the i'th entry is the
+            # i'th smallest value in order_vals
+            order(
+                # rank with random tie breaking to avoid ties.
+                # If just using order_vals (without rank first)
+                # order wouldn't break ties randomly.
+                rank(abs(order_vals), ties.method = "random")
+            )
+        ])
+        
+        # Selects the first n_select x's in x_order (the n_select most
+        # significant x's) and saves results in res_mat.
+        for (n_select in n_selects) {
+            if (n_select == 0) selected <- NULL
+            else selected <- x_order[1:n_select]
+            tpr_fpr_vec(selected, DAG_list[[i]]) %>% 
+                unlist %>% 
+                matrix(nrow = 1,
+                    byrow = T,
+                    dimnames = list(method_name,
+                                    c("tpr_anc", "fpr_anc",
+                                        "tpr_pa", "fpr_pa"))) ->
+                res_mat[row_start, ]
+            
+            row_start <- row_start + 1
+        }
+    }
+
+    # Formats results for this file with method name and DAG_ids and
+    # adds to res_tib
+    res_mat %>%
+        as_tibble() %>%
+        cbind(
+            expand.grid(list(
+                method = method_name,
+                n_select = n_selects,
+                DAG_id = 1:n_DAGs
+            ))) %>% 
+        rbind(res_tib) ->
+        res_tib
+    cat("Done!\n")
+    
+    saveRDS(res_tib, str_c(dir, "/tpr_fpr_", method_name, ".rds"))
+}
+
+# Runs save_tpr_fpr_fewer on all directories of the relevant type.
+add_missing_tpr_fpr_fewer <- function(order_func, method_name,
                                 sim_type = "alltargets",
                                 n_DAGs_total = 1000,
                                 dir = "data") {
@@ -247,6 +417,8 @@ save_ROC_points <- function(dir) {
         ) %>%
         saveRDS(str_c(dir, "/ROC_points.rds"))
 }
+
+
 
 # Runs save_ROC_points on all data-directories in dir
 add_missing_ROC_points <- function(sim_type = "alltargets", dir = "data/") {
@@ -404,4 +576,6 @@ collect_AUC_singletargets <- function(dir = "data/") {
             cat("No AUC.rds\n")
         }
     }
+    
+    saveRDS(complete_tib, str_c(dir, "/AUC_singletargets.rds"))
 }
