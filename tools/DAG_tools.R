@@ -46,9 +46,13 @@ get_random_DAG <- function(n_x = 30,
 # The orange are X, the yellow are H, and the blue is Y.
 # Hard to see structure when there are many nodes.
 plot.DAG_data <- function(DAG_data) {
+  # Vector indicating colors of the nodes
   col <- rep(NA, length(DAG_data$x) + length(DAG_data$h) + 1)
+  # x is orange
   col[DAG_data$x] <- 1
+  # y is blue
   col[DAG_data$y] <- 2
+  # h is yellow
   col[DAG_data$h] <- 4
   plot(DAG_data$iG, vertex.color = col, edge.arrow.size = 0.5)
 }
@@ -139,7 +143,7 @@ randomDAG_y <- function(p,probConnect,causalOrder = sample(p,p,replace=FALSE))
   DAG[causalOrder[p],node] <- ParentYesNo
   
   causalOrder <- rev(causalOrder)
-  
+  # Returns the DAG and the causal order.
   return(mget(c("DAG", "causalOrder")))
 }
 
