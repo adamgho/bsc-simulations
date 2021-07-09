@@ -71,3 +71,7 @@ ggplot(ROC_tib, aes(x = fpr_anc_mean, y = tpr_anc_mean, col = method)) +
     geom_point() +
     geom_line() +
     geom_abline(lty = 2)
+
+tpr_fpr_tib <- tibble(readRDS("data/alltargets_10_500_sdw7_sdh5/tpr_fpr_DPOLS-coef.rds"))
+length(unique(tpr_fpr_tib$DAG_id))
+tpr_fpr_tib$DAG_id

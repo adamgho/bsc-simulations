@@ -213,20 +213,23 @@ sim_singletargets <- function(DAG_data,
   # Indices of X's intervened on.
   interv_indices <- sort(sample(DAG_data$x, num_x_interv))
   # Vector where the i'th entry is the index of the X intervened on
-  # in the i'th experiment
-  interv <- rep(interv_indices, each = n_obs_each * num_interv_each)
+  # in the i'th environment
+  interv <- rep(interv_indices, each = num_interv_each)
   # Shift noise where the i'th entry is the mean shift applied to
-  # the X with index interv[i] in the i'th experiment.
-  w = rnorm(num_x_interv * n_obs_each, mean = 0, sd = shift_noise_sd)
+  # the X with index interv[i] in the i'th environment
+  w <- rnorm(num_x_interv * num_interv_each, mean = 0, sd = shift_noise_sd)
 
-  # Total number of intervention experiments
-  num_experiments <- num_interv_each * num_x_interv
+  # Total number of different interventional environments
+  # (this means excluding the control setting)
+  num_interventional_settings <- num_interv_each * num_x_interv
+
   # The i'th entry is the number of observations of the i'th
   # interventional setting.
-  n_obs = rep(n_obs_each, times = num_experiments)
+  n_obs <- rep(n_obs_each, times = num_interventional_settings)
 
   num_var <- nrow(DAG_data$B)
 
+  # Simulates n_obs_each observations from the i'th interventional setting.
   interv_sim <- function(i) {
     # rows for variables, columns for repetitions.
     N <- matrix(rnorm(n_obs[i] * num_var),
@@ -260,7 +263,7 @@ sim_singletargets <- function(DAG_data,
     control_tib
 
   # list where i'th entry is simulated data for i'th intervention
-  sim_list <- lapply(1:num_experiments, interv_sim)
+  sim_list <- lapply(1:num_interventional_settings, interv_sim)
   # Functions to permute rows from i'th environment
   if (n_obs_each == 2) {
     # If there are exactly two observations in each setting
@@ -281,7 +284,7 @@ sim_singletargets <- function(DAG_data,
   }
 
   # Applies all permutations to obtain tilde data sets
-  sim_list_tilde <- lapply(1:num_experiments, permute_experiment)
+  sim_list_tilde <- lapply(1:num_interventional_settings, permute_experiment)
   # Collects all rows in one tibble
   sim_tib <- rbind(do.call(rbind, sim_list), control_tib)
   sim_tib_tilde <- rbind(do.call(rbind, sim_list_tilde), control_tib_tilde)
@@ -294,11 +297,12 @@ sim_singletargets <- function(DAG_data,
   DAG_data$dat$Y_tilde <- as.matrix(sim_tib_tilde[, DAG_data$y])
   DAG_data$dat$w <- w
   DAG_data$dat$setting <- c(
-          rep(1:num_experiments, each = n_obs_each), # intervention settings
+          rep(1:num_interventional_settings, each = n_obs_each), # intervention settings
           rep(0, n_obs_control) # control setting
   )
   # 0 indicates control data set.
-  DAG_data$dat$interv <- c(interv, rep(0, n_obs_control))
+  DAG_data$dat$interv <- c(rep(interv, each = n_obs_each),
+                            rep(0, n_obs_control))
 
   return(DAG_data)
 }
