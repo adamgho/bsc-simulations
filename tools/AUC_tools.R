@@ -1,10 +1,9 @@
 library(tidyverse)
 source("tools/methods.R")
 
+# Vector of how many x's to select when getting ROC points
 n_selects <- 0:30
 n_n_selects <- length(n_selects)
-
-n_methods <- length(methods)
 
 # Input:
 #   anc_selected: The nodes selected as possible parents or ancestors.
@@ -24,10 +23,10 @@ n_methods <- length(methods)
 #      $\mathrm{TPR} = \frac{\#\text{parents in anc_selected}}
 #      {\#\text{parents}}.$ 
 tpr_fpr_vec <- function(anc_selected, DAG_data) {
-  c(
-    get_tpr_fpr(anc_selected, DAG_data$anc_y, DAG_data$x),
-    get_tpr_fpr(anc_selected, DAG_data$pa_y, DAG_data$x)
-  )
+    c(
+        get_tpr_fpr(anc_selected, DAG_data$anc_y, DAG_data$x),
+        get_tpr_fpr(anc_selected, DAG_data$pa_y, DAG_data$x)
+    )
 }
 
 # anc_selected and anc_y could also be parents
@@ -40,39 +39,36 @@ tpr_fpr_vec <- function(anc_selected, DAG_data) {
 #   Passing pa_y gives element 3-4 of tpr_fpr_vec.
 #   Passing anc_y gives element 1-2 of tpr_fpr_vec.
 get_tpr_fpr <- function(anc_selected, anc_y, x) {
-  anc_in_x <- intersect(anc_y, x)
-  non_anc <- setdiff(x, anc_y)
-  true_pos <- intersect(anc_selected, anc_y)
-  false_pos <- intersect(non_anc, anc_selected)
-  tpr <- ifelse(length(anc_in_x) == 0,
-                1,
-                length(true_pos) / length(anc_in_x))
-  fpr <- ifelse(length(non_anc) == 0,
-                0,
-                length(false_pos) / length(non_anc))
-  c(tpr, fpr)
+    # Ancestors of y in x
+    anc_in_x <- intersect(anc_y, x)
+    # x's that are not ancestors of y
+    non_anc <- setdiff(x, anc_y)
+    # Number of selected ancestors that are truly ancestors
+    true_pos <- intersect(anc_selected, anc_y)
+    # Number of selected ancestors that are actually not ancestors
+    false_pos <- intersect(non_anc, anc_selected)
+    # Calculates true positive rate.
+    # If there are no ancestors of y in x, then the true positive rate is
+    # set to 1
+    tpr <- ifelse(length(anc_in_x) == 0,
+                    1,
+                    length(true_pos) / length(anc_in_x))
+    # Calculates false positive rate.
+    # If there are no x's that are not ancestors of y, then the false positive
+    # rate is set to 0
+    fpr <- ifelse(length(non_anc) == 0,
+                    0,
+                    length(false_pos) / length(non_anc))
+    # Returns vector containing true positive and false positive rate.
+    c(tpr, fpr)
 }
-
-# Input:
-#   DAG_data: DAG_data object containing a data set.
-#   methods:  A character vector of method names (corresponding to nonzero
-#             functions in the methods.R file).
-# Output:
-#   Matrix with a row for each method, giving the output of tpr_fpr_vec
-#   when the ancestors/parents are selected by that method.
-tpr_fpr_mat <- function(DAG_data, methods, alpha = 0.05) {
-  nonzero_list(DAG_data, methods, alpha) %>% 
-    lapply(tpr_fpr_vec, DAG_data) %>% 
-    unlist %>% 
-    matrix(nrow = length(methods),
-           byrow = T,
-           dimnames = list(methods,
-                           c("tpr_anc", "fpr_anc",
-                             "tpr_pa", "fpr_pa")))
-}
-
 
 # Gives all sim directories in dir
+# Input:
+#   sim_type: Either "alltargets" or "singletargets"
+#   dir: Directory containing sim-directories
+# Output:
+#   Vector of all names of simulation directories in dir.
 get_sim_dirs <- function(sim_type, dir = "data") {
     if (sim_type == "alltargets") {
         list.files(dir,
@@ -86,11 +82,6 @@ get_sim_dirs <- function(sim_type, dir = "data") {
         return(NULL)
     }
 }
-
-dir <- "data/alltargets_10_500_sdw7_sdh5"
-order_func <- beta_DPOLS
-method_name <- "DPOLS-coef"
-n_DAGs_total <- 1000
 
 # Saves true positive and false positive rates 
 # Input:
@@ -160,7 +151,8 @@ save_tpr_fpr <- function(dir, order_func, method_name,
             )
         )
         row_start <- 1
-
+        # Loops through DAGs in the file.
+        # Breaks out of loop if it reaches the desired number of DAGs.
         for (i in 1:n_DAGs) {
             cat(sprintf("%d|", i))
             order_vals <- order_func(DAG_list[[i]]$dat)
@@ -232,10 +224,10 @@ save_tpr_fpr <- function(dir, order_func, method_name,
     saveRDS(res_tib, str_c(dir, "/tpr_fpr_", method_name, ".rds"))
 }
 
-# Takes order_func (a function giving p-values from data) and
+# Takes pval_func (a function returning p-values from dat) and
 # returns a function giving 1 - p_values instead.
-one_minus <- function(order_func) {
-    function(dat) 1 - order_func(dat)
+one_minus <- function(pval_func) {
+    function(dat) 1 - pval_func(dat)
 }
 
 # Runs save_tpr_fpr on all data-directoris in dir that don't already
@@ -266,6 +258,7 @@ quartile3 <- function(x) quantile(x, 0.75)
 # Generates points for ROC curves.
 # For each combination of method and n_selected it finds the
 # mean  and quartiles of true- and false positive rates.
+# Saves results in files named ROC_points.rds
 save_ROC_points <- function(dir) {
     cat(sprintf("\n### ROC: %s ###\n", dir))
 
@@ -284,7 +277,6 @@ save_ROC_points <- function(dir) {
     # Calculates mean, median, 1st quartile, and 3rd quartile of
     # all tpr_fpr numbers.
     # Saves in ROC_points.rds.
-
     tib %>%
         group_by(method, n_select) %>%
         summarise(across(
@@ -301,8 +293,6 @@ save_ROC_points <- function(dir) {
         saveRDS(str_c(dir, "/ROC_points.rds"))
 }
 
-
-
 # Runs save_ROC_points on all data-directories in dir
 add_missing_ROC_points <- function(sim_type = "alltargets", dir = "data/") {
     sim_dirs <- get_sim_dirs(sim_type, dir)
@@ -312,23 +302,33 @@ add_missing_ROC_points <- function(sim_type = "alltargets", dir = "data/") {
     }
 }
 
+# Calculates AUC from ROC points in the sim-directory dir and saves the
+# AUC in a new file di/AUC.rds.
+# If there is no file  dir/ROC_points.rds it returns 1 (warning).
 save_AUC <- function(dir) {
     cat(sprintf("\n### AUC: %s ###\n", dir))
 
+    # Checks whether the file dir/ROC_points exists.
+    # If not: Return 1.
     if (!file.exists(str_c(dir, "/ROC_points.rds"))) {
         cat("No ROC_points.rds file. Skipping.\n")
         return(1)
     }
+    # Reads dir/ROC_points.rds
     tib <- readRDS(str_c(dir, "/ROC_points.rds"))
-    # Types of tpr and fpr, e.g _anc_mean or _pa_median
+    # Suffixes of tpr and fpr, e.g _anc_mean or _pa_median
     suffixes <- na.omit(str_extract(
         colnames(tib),
         "(?<=tpr_)[a-z]+_[a-z0-9]+$"
     ))
     n_suffixes <- length(suffixes)
+    # Vector to contain results
     AUC_vec <- rep(NA, n_suffixes * n_methods)
+    # Counts index reached in AUC_vec
     index_count <- 1 
     methods <- levels(tib$method)
+    # Loops through different methods and calculates AUC for each suffix
+    # e.g for anc_mean (ancestors, mean of tpr/fpr) and so on.
     for (i in 1:length(methods)) {
         tib_method <- filter(tib, method == methods[i])
         for (k in 1:n_suffixes) {
@@ -340,7 +340,8 @@ save_AUC <- function(dir) {
             index_count <- index_count + 1
         }
     }
-
+    # Saves results in tibble also including the method, and the suffix split
+    # into type (anc or pa) and measure (e.g mean or median).
     expand.grid(
         list(
             suffix = suffixes,
@@ -375,19 +376,22 @@ get_AUC <- function(tpr, fpr) {
     return(area)
 }
 
+# Wrapper that calls the relevant version of collect_AUC for the sim_type.
 collect_AUC <- function(sim_type = "alltargets", dir = "data/") {
     do.call(str_c("collect_AUC_", sim_type), list(dir = dir))
 }
 
-# Collects all AUC from alltargets directories in dir in
-# a single tibble and saves it in dir.
-# Only works for alltargets with varied 
+# Collects all tibbles saved in files AUC.rds from alltargets directories in 
+# dir in a single tibble and saves it in dir/AUC_alltargets.rds.
+# The parameters for the different alltargets setups are saved in the tibble
+# as well.
 collect_AUC_alltargets <- function(dir = "data/") {
     cat(sprintf("\n### Collecting alltargets AUC from %s ###\n", dir))
 
     sim_dirs <- get_sim_dirs("alltargets", dir)
     complete_tib <- tibble()
-
+    
+    # Loops through alltargets directories
     for (sim_dir in sim_dirs) {
         cat(sprintf("# %-25s", sim_dir))
         complete_dir <- str_c(dir, "/", sim_dir)
@@ -413,16 +417,19 @@ collect_AUC_alltargets <- function(dir = "data/") {
 
             cat("Added\n")
         } else {
+            # If sim_dir doesn't contain a file named AUC.rds
+            # it is skipped
             cat("No AUC.rds\n")
         }
     }
-
+    # Saves results
     saveRDS(complete_tib, str_c(dir, "/AUC_alltargets.rds"))
 }
 
 
 # Collects all AUC from singletargets directories in dir in
-# a single tibble and saves it in dir.
+# a single tibble and saves it in dir/AUC_singletargets.rds.
+# Similar to collect_AUC_alltargets (but for singletargets instead).
 collect_AUC_singletargets <- function(dir = "data/") {
     cat(sprintf("\n### Collecting AUC from %s ###\n", dir))
 
