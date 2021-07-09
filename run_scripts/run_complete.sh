@@ -1,23 +1,24 @@
 #!/bin/bash
 
-# The three steps must be run in this order, but any of the steps can be
-# run in any order (e.g you can split the alltargets_data.sh script into
-# as many pieces as you have cores, by splitting the alltargets_params
-# files in more pieces).
+# Generate DAGs
 
-## 1. First the data must be generated.
+Rscript run_scripts/DAGs1000_nx30_nh30_probconnect04.R
 
-Rscript run_scripts/alltargets_data 1 2 3 4
-Rscript run_scripts/singletargets_data 1 2 3 4
+# Generate data
 
-## 2. Now the tpr_fpr files must be generated.
+Rscript run_scripts/alltargets_data alltargets_params_complete.txt
+Rscript run_scripts/singletargets_data singletargets_params_complete.txt
+
+# Process data to generate tpr_fpr files
 
 sh run_scripts/alltargets_tpr_fpr.sh
 sh run_scripts/singletargets_tpr_fpr.sh
 
-## 3. Add ROC points and AUC points.
+# Add ROC points and AUC points.
 
 Rscript run_scripts/alltargets_AUC.R
 Rscript run_scripts/singletargets_AUC.R
 
-## 4. Save plots (TODO)
+# Save plots
+
+Rscript run_scripts/generate_plots.R

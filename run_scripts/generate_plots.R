@@ -1,3 +1,5 @@
+# Saves plots
+
 library(tidyverse)
 theme_set(
   theme_bw(base_size=12, base_family="Palatino") %+replace%
