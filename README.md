@@ -6,8 +6,8 @@ This repository contains code for reproducing -- or expanding upon -- simulation
 
 Create
 
-- a subdirectory named "data". This will store a lot of data (hundreds of GB), so personally I mounted an external HDD at this directory.
-- a subdirecte named "plots".
+- a subdirectory named `data`. This will store a lot of data (hundreds of GB), so personally I mounted an external HDD at this directory.
+- a subdirecte named `plots`.
 
 You must have `R` installed.
 
@@ -60,8 +60,6 @@ To run the simulations unparallelized (which will take a *very* long time) run
 ### `run_scripts`
 
 `run_scripts` contains user interfaces for easily simulating large amounts of data.
-
-#### Simulating from `alltargets` setup
 
 ### `tools`
 
