@@ -17,7 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-## Functions `randomDAG` and `computeCausOrder` in `tool/DAG_tools.R`
+## Functions `randomDAG` and `computeCausOrder` in `tools/DAG_tools.R`
 
 Copyright (c) 2010--2013    Jonas Peters [jonas.peters@math.ku.dk]
 All rights reserved.
