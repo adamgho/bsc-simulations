@@ -1,3 +1,4 @@
+
 library(tidyverse)
 library(igraph)
 library(Matrix)
@@ -24,7 +25,7 @@ get_random_DAG <- function(n_x = 30,
                               n_h = 30,
                            prob_connect = 0.4) {
   num_var <- n_x + n_h + 1
-  rDAG <- randomDAG_y(num_var, prob_connect)
+  rDAG <- randomDAG(num_var, prob_connect)
   G <- rDAG$DAG
   iG <- graph_from_adjacency_matrix(G) # G as igraph object
   B <- randomB(G)
@@ -107,8 +108,8 @@ computeCausOrder <- function(G)
   return(causOrder)
 }
 
-randomDAG_y <- function(p,probConnect,causalOrder = sample(p,p,replace=FALSE))
-  # Adapted slightly to also return causalOrder.
+randomDAG <- function(p,probConnect,causalOrder = sample(p,p,replace=FALSE))
+  # Adapted slightly by nrm545@alumni.ku.dk to also return causalOrder.
   # Original unadapted version written by Jonas Peters:
   # Copyright (c) 2010 - 2012  Jonas Peters  [peters@stat.math.ethz.ch]
   #    
