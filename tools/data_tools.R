@@ -4,20 +4,21 @@ library(Matrix)
 
 # Simulates data from the alltargets setup.
 # INPUT:
-# DAG_data determines the DAG, the structural assignment, and which variables
-# are hiddens, X's, and Y.
-# num_interv is the number of environments (i.e different interventions).
-# shift_noise_sd is the sd of the mean shifts.
-# n_obs_each is the number of observations from each environment (setting this
-# means that all environments have the same number of observations).
-# sd_hiddens is the sd of the hidden variables.
+#   DAG_data determines the DAG, the structural assignment, and which variables
+#   are hiddens, X's, and Y.
+#   num_interv is the number of environments (i.e different interventions).
+#   shift_noise_sd is the sd of the mean shifts.
+#   n_obs_each is the number of observations from each environment (setting this
+#   means that all environments have the same number of observations).
+#   sd_hiddens is the sd of the hidden variables.
+# OUTPUT: DAG_data object, now with dat attribute containing data.
 sim_alltargets <- function(DAG_data,
                           n_obs_each,
                           num_interv,
                           shift_noise_sd,
                           sd_hiddens) {
   # The i'th element of n_obs contains the number of observations
-  # of the i'th setting.
+# of the i'th setting.
   n_obs <- rep(n_obs_each, num_interv)
   num_var <- nrow(DAG_data$B)
  
@@ -85,32 +86,54 @@ sim_alltargets <- function(DAG_data,
   return(DAG_data)
 }
 
-# Simulates alltargets data sets for each DAG in DAG_list
+# Simulates alltargets data sets for each DAG in DAG_list and saves in files.
+# The datasets are saved in directories
+# data/alltargets_[n_obs_each]_[num_interv]_sdw[shift_noise_sd]_sdh[sd_hiddens]
+# containing multiple files 1.rds, ..., n.rds, where n is determined such that
+# each files has a maximum size of max_MB_per_file MB (to avoid overloading
+# memory).
+# (The actual size of the file may get larger, since the size of the file
+# is only estimated beforehand).
 sim_alltargets_datasets <- function(DAG_list, n_obs_each, num_interv,
                                     shift_noise_sd, sd_hiddens,
                                     dir = "data/", max_MB_per_file = 500) {
     n_DAGs <- length(DAG_list)
+    # Expected total size
+    # (the relationship was determined empirically from early
+    # simulations)
     expected_MB_total <- 145 * (n_obs_each * num_interv) / 300 + 11
     expected_MB_per_DAG <- expected_MB_total / n_DAGs
+    # Total number of DAGs to include in each file
+    # Note that the last file may contain fewer DAGs.
     DAGs_per_file <- min(max(round(max_MB_per_file / expected_MB_per_DAG), 1),
                                 n_DAGs)
-
+    # Number of files containing DAGs_per_file DAGs.
+    # There can possibly be an extra file containing the remaining DAGs
+    # (which will be: n_DAGs mod DAGs_per_file).
     num_files_full <- floor(n_DAGs / DAGs_per_file)
+    # The indices of DAGs where it switches from one file to the next
     file_cut_points <- cumsum(c(0, rep(DAGs_per_file, num_files_full)))
+    # Adds the complete number of DAGs as a cut point if there are
+    # remaining DAGs
     if (n_DAGs %% DAGs_per_file != 0) file_cut_points <-
                                 c(file_cut_points, n_DAGs)
 
+    # Name of directory to contain simulated data
     setting_name <- sprintf("alltargets_%d_%d_sdw%d_sdh%d",
                         n_obs_each, num_interv, shift_noise_sd, sd_hiddens)
-
     dir_complete <- str_c(dir, setting_name)
+    # The directory will be named with suffix _incomplete until this function
+    # has finished running (useful to see if it was interrupted or is not
+    # yet finished).
     dir <- str_c(dir_complete, "_incomplete")
 
     file_index_start <- 1
-
+    # If the directory exists new data will not be simulated.
     if (dir.exists(dir_complete))  {
         cat(sprintf("!!! WARNING: Dir %s already exists. Skipping this one. !!!\n", dir_complete))
         return(1)
+    # If the directory with "_incomplete"-suffix exists the simulation will
+    # continue from where the last run left off (assuming same file-size).
     } else if (dir.exists(dir)) {
         # Finds highest occuring file
         str_extract(list.files(dir), "[0-9]+(?=.rds)") %>%
@@ -126,6 +149,7 @@ sim_alltargets_datasets <- function(DAG_list, n_obs_each, num_interv,
         dir.create(dir)
     }
 
+    # Total number of files to simulate
     num_files_total <- length(file_cut_points) - 1
 
     # Creates empty file which states the total number of files
@@ -140,12 +164,15 @@ sim_alltargets_datasets <- function(DAG_list, n_obs_each, num_interv,
         expected_MB_total / num_files_total,
         expected_MB_total / 1000))
 
+    # Simulates data for each file and saves it
     for (file_index in file_index_start:num_files_total) {
+        # DAGs to store in the file
         current_DAGs <- DAG_list[(file_cut_points[file_index] + 1):
                                 file_cut_points[file_index + 1]]
         n_current_DAGs <- length(current_DAGs)
         cat(sprintf("\nFile %d / %d\n%d DAGs: ",
                 file_index, num_files_total, n_current_DAGs))
+        # Adds data to each DAG_data object
         for (i in 1:n_current_DAGs) {
             cat(sprintf("%d|", i))
             current_DAGs[[i]] <- sim_alltargets(current_DAGs[[i]],
@@ -154,6 +181,7 @@ sim_alltargets_datasets <- function(DAG_list, n_obs_each, num_interv,
                                     shift_noise_sd = shift_noise_sd,
                                     sd_hiddens = sd_hiddens)
         }
+        # Saves file
         saveRDS(current_DAGs, sprintf("%s/%d.rds", dir, file_index))
         cat("Done!\n")
     }
@@ -161,24 +189,26 @@ sim_alltargets_datasets <- function(DAG_list, n_obs_each, num_interv,
     # Creates empty file "completed" in directory
     file.create(str_c(dir, "/completed"))
 
-    # Renames directory
+    # Renames directory so it doesn't say "_incomplete" anymore
     system2("mv", args = c(dir, dir_complete))
 
 }
 
 # Simulates alltargets data sets for each DAG in DAG_list
-# for each row in the params text file
-# The column order is:  
+# for each row in the params text file.
+# The column order in the text file must be:  
 # n_obs_each num_interv shift_noise_sd sd_hiddens
 sim_alltargets_txt <- function(DAG_list,
                                 txt_path,
                                 dir = "data/",
                                 max_MB_per_file = 500)
 {
+  # Read parameters from text file
   mat <- matrix(scan(txt_path),
                 ncol = 4, byrow = T)
   n_sims <- nrow(mat)
 
+  # Simulate and save data
   for (i in 1:n_sims) {
     cat(sprintf("\n### Simulation setting %d / %d ###\n\n",
                   i, n_sims))
@@ -188,10 +218,6 @@ sim_alltargets_txt <- function(DAG_list,
     )
   }
 }
-
-
-
-
 
 # Simulates data from the singletargets setup.
 # Input:
@@ -203,6 +229,9 @@ sim_alltargets_txt <- function(DAG_list,
 #   n_obs_control: Number of observations with no intervention.
 #   shift_noise_sd: sd of the mean shift.
 #   sd_hiddens: sd of the hiddens.
+# OUTPUT: DAG_data object with dat attribute containing simulated data.
+#
+# See also sim_alltargets for comments (they are very similar)
 sim_singletargets <- function(DAG_data,
                               n_obs_each,
                               num_interv_each,
@@ -308,6 +337,10 @@ sim_singletargets <- function(DAG_data,
 }
 
 # Simulates singletargets data sets for each DAG in DAG_list
+# See sim_alltargets_datasets for comments.
+# The only difference is the way to calculate expected file size,
+# the naming of the data directories, and that it calls sim_singletargets
+# instead of sim_alltargets.
 sim_singletargets_datasets <- function(DAG_list,
                                     n_obs_each,
                                     num_interv_each,
@@ -330,6 +363,7 @@ sim_singletargets_datasets <- function(DAG_list,
     if (n_DAGs %% DAGs_per_file != 0) file_cut_points <-
                                 c(file_cut_points, n_DAGs)
 
+    # Name of directories contains parameters
     setting_name <- sprintf("singletargets_%d_%d_%d_%d_sdw%d_sdh%d",
                         n_obs_each,
                         num_interv_each,
@@ -413,10 +447,12 @@ sim_singletargets_txt <- function(DAG_list,
                                 dir = "data/",
                                 max_MB_per_file = 500)
 {
+  # Reads parameters
   mat <- matrix(scan(txt_path),
                 ncol = 6, byrow = T)
   n_sims <- nrow(mat)
 
+  # Simulates data
   for (i in 1:n_sims) {
     cat(sprintf("\n### Simulation setting %d / %d ###\n\n",
                   i, n_sims))
