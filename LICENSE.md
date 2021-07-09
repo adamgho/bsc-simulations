@@ -1,4 +1,4 @@
-# Licensing
+# License 
 
 ## Everything except for the functions `randomDAG` and `computeCausOrder`
 
