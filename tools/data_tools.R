@@ -1,6 +1,8 @@
-library(tidyverse)
-library(igraph)
-library(Matrix)
+suppressWarnings(suppressMessages(library(dplyr)))
+suppressWarnings(suppressMessages(library(stringr)))
+suppressWarnings(suppressMessages(library(tidyr)))
+# suppressWarnings(suppressMessages(library(igraph)))
+suppressWarnings(suppressMessages(library(Matrix)))
 
 # Simulates data from the alltargets setup.
 # INPUT:
@@ -217,6 +219,19 @@ sim_alltargets_txt <- function(DAG_list,
       dir = dir, max_MB_per_file = max_MB_per_file
     )
   }
+}
+
+# Like the above, but reads parameters from stdin
+sim_alltargets_stdin <- function(DAG_list,
+                                  dir = "data/",
+                                  max_MB_per_file = 500)
+{
+  params <- scan()
+
+  sim_alltargets_datasets(
+    DAG_list, params[i, 1], params[i, 2], params[i, 3], params[i, 4],
+    dir = dir, max_MB_per_file = max_MB_per_file
+  )
 }
 
 # Simulates data from the singletargets setup.

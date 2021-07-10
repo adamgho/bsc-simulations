@@ -1,4 +1,7 @@
-library(tidyverse)
+suppressWarnings(suppressMessages(library(dplyr)))
+suppressWarnings(suppressMessages(library(stringr)))
+suppressWarnings(suppressMessages(library(tidyr)))
+
 source("tools/methods.R")
 
 # Vector of how many x's to select when getting ROC points
@@ -97,17 +100,23 @@ get_sim_dirs <- function(sim_type, dir = "data") {
 #                      Default is to process all 1000 DAGs. 
 save_tpr_fpr <- function(dir, order_func, method_name,
                         n_DAGs_to_process = 1000) {
-    # If there are only 2 observations in each environment, then
-    # ICP can't run.
+    # If there are only 2 observations in some environment, then ICP can't run.
     if (method_name == "ICP" &
-        str_extract(
+        # First checks whether n_obs_each == 2 (for either setup)
+        (( str_extract(
             dir,
             # The number after the first underscore is
             # the number of observations per environment.
             "(?<=targets_)[0-9]+(?=_)"
-        ) %>% as.numeric < 3) {
-            cat(sprintf("# Skipping %s
-  (ICP needs min. three obs. per environment)\n\n",
+        ) %>% as.numeric < 3) |
+        # Now checks whether it is singletargets and has less than 3 control
+        # observations.
+            (str_extract(dir, "[a-z]+(?=targets)") == "single" &
+            str_extract(dir,
+                        "(?<=singletargets_[0-9]{1,10}_[0-9]{1,10}_[0-9]{1,10}_)[0-9]+(?=_)") %>% 
+                as.numeric < 3)))
+    {
+                   cat(sprintf("# Skipping %s\n(ICP needs min. three obs. per environment)\n\n",
                         dir))
             return(1)
     }
@@ -217,12 +226,14 @@ save_tpr_fpr <- function(dir, order_func, method_name,
     } else {
         cat(sprintf(
             "\n!!! WARNING: Only %d DAGs in %s. You asked me to process %d DAGs. !!!\n",
-            n_DAGs_processed, dir, n_DAGs_total
+            n_DAGs_processed, dir, n_DAGs_to_process
         ))
     }
     
     saveRDS(res_tib, str_c(dir, "/tpr_fpr_", method_name, ".rds"))
 }
+
+
 
 # Takes pval_func (a function returning p-values from dat) and
 # returns a function giving 1 - p_values instead.
@@ -303,7 +314,7 @@ add_missing_ROC_points <- function(sim_type = "alltargets", dir = "data/") {
 }
 
 # Calculates AUC from ROC points in the sim-directory dir and saves the
-# AUC in a new file di/AUC.rds.
+# AUC in a new file dir/AUC.rds.
 # If there is no file  dir/ROC_points.rds it returns 1 (warning).
 save_AUC <- function(dir) {
     cat(sprintf("\n### AUC: %s ###\n", dir))
@@ -322,11 +333,11 @@ save_AUC <- function(dir) {
         "(?<=tpr_)[a-z]+_[a-z0-9]+$"
     ))
     n_suffixes <- length(suffixes)
-    # Vector to contain results
-    AUC_vec <- rep(NA, n_suffixes * n_methods)
     # Counts index reached in AUC_vec
     index_count <- 1 
     methods <- levels(tib$method)
+    # Vector to contain results
+    AUC_vec <- rep(NA, n_suffixes * length(methods))
     # Loops through different methods and calculates AUC for each suffix
     # e.g for anc_mean (ancestors, mean of tpr/fpr) and so on.
     for (i in 1:length(methods)) {

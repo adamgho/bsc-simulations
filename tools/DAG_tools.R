@@ -1,7 +1,5 @@
-
-library(tidyverse)
-library(igraph)
-library(Matrix)
+suppressWarnings(suppressMessages(library(igraph)))
+suppressWarnings(suppressMessages(library(Matrix)))
 
 ## Random DAGs are saved as S3 objects of the class "DAG_data".
 ## A DAG_data object contains the indices x, y, and, and h of X, Y, and H,
@@ -74,7 +72,7 @@ pa <- function(iG, y) neighbors(iG, y, "in")
 randomB <- function(G,lB = 0.1,uB = 0.9,twoIntervals = 1)
   # if twoIntervals == TRUE, lB and uB should be positive
   # Copyright (c) 2012-2012  Jonas Peters [peters@stat.math.ethz.ch]
-  # All rights reserved.  See the file COPYING for license terms.
+  # All rights reserved.  See the file LICENSE.md for license terms.
 {
   numCoeff <- sum(G)
   B <- t(G)
@@ -92,7 +90,7 @@ randomB <- function(G,lB = 0.1,uB = 0.9,twoIntervals = 1)
 
 computeCausOrder <- function(G)
   # Copyright (c) 2013  Jonas Peters  [peters@stat.math.ethz.ch]
-  # All rights reserved.  See the file COPYING for license terms. 
+  # All rights reserved.  See the file LICENSE.md for license terms. 
 {
   p <- dim(G)[2]
   remaining <- 1:p
@@ -109,7 +107,7 @@ computeCausOrder <- function(G)
 }
 
 randomDAG <- function(p,probConnect,causalOrder = sample(p,p,replace=FALSE))
-  # Adapted slightly by nrm545@alumni.ku.dk to also return causalOrder.
+  # Adapted slightly by Adam Gorm Hoffmann [nrm545@alumni.ku.dk] to also return causalOrder.
   # Original unadapted version written by Jonas Peters:
   # Copyright (c) 2010 - 2012  Jonas Peters  [peters@stat.math.ethz.ch]
   #    

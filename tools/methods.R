@@ -1,7 +1,7 @@
-library(InvariantCausalPrediction)
-library(MASS)
-library(Matrix)
-library(igraph)
+suppressWarnings(suppressMessages(library(InvariantCausalPrediction)))
+suppressWarnings(suppressMessages(library(MASS)))
+suppressWarnings(suppressMessages(library(Matrix)))
+# suppressWarnings(suppressMessages(library(igraph)))
 
 ### Parameter estimates
 ### Input: dat from a DAG_data object (pass DAG_data$dat)

@@ -1,6 +1,6 @@
 # License 
 
-## Everything except for the functions `randomDAG` and `computeCausOrder`
+## Everything except for the functions `randomDAG`, `computeCausOrder` and `randomB`
 
 Copyright (c) 2021    Adam Gorm Hoffmann [nrm545@alumni.ku.dk] 
 
@@ -17,7 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-## Functions `randomDAG` and `computeCausOrder` in `tools/DAG_tools.R`
+## Functions `randomDAG`, `computeCausOrder` and `randomB` in `tools/DAG_tools.R`
 
 Copyright (c) 2010--2013    Jonas Peters [jonas.peters@math.ku.dk]
 All rights reserved.
