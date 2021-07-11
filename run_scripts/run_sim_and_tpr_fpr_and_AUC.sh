@@ -73,7 +73,7 @@ for SIMTYPE in all single; do
 		while ! $STARTED; do
 			#echo SIMCOUNT $SIMCOUNT
 			#echo PROCESSES $(ps | grep R | wc -l)
-			echo PROCESSES $(sh ./run_scripts/get_running_PIDs.sh | wc -l)
+			#echo PROCESSES $(sh ./run_scripts/get_running_PIDs.sh | wc -l)
 			if [ $(sh ./run_scripts/get_running_PIDs.sh | wc -l) -lt $PROCMAX ]; then
 				# Runs script generating data and saves output in a .output[details] file.
 				Rscript run_scripts/${SIMTYPE}targets_sim.R $PARAMS > run_scripts/.output/${SIMTYPE}targets_$(echo $PARAMS | tr " " "_").txt &
@@ -98,7 +98,7 @@ while [ $SIMCOUNT -gt 0 ]; do
 		# Loops through parameters
 		while read PARAMS; do
 			#echo PARAMS $PARAMS
-			echo SIMCOUNT $SIMCOUNT
+			#echo SIMCOUNT $SIMCOUNT
 			# Checks whether the simulaiton is done and has not been processed yet
 			if [ ${PIDS[$SIMTYPE$PARAMS]} != 0 ] && ! kill -0 ${PIDS[$SIMTYPE$PARAMS]} &> /dev/null; then
 				for METHOD in $(ls run_scripts/tpr_fpr_methods); do
