@@ -73,7 +73,8 @@ for SIMTYPE in all single; do
 		while ! $STARTED; do
 			#echo SIMCOUNT $SIMCOUNT
 			#echo PROCESSES $(ps | grep R | wc -l)
-			if [ $(ps | grep R | wc -l) -lt $PROCMAX ]; then
+			echo PROCESSES $(sh ./run_scripts/get_running_PIDs.sh | wc -l)
+			if [ $(sh ./run_scripts/get_running_PIDs.sh | wc -l) -lt $PROCMAX ]; then
 				# Runs script generating data and saves output in a .output[details] file.
 				Rscript run_scripts/${SIMTYPE}targets_sim.R $PARAMS > run_scripts/.output/${SIMTYPE}targets_$(echo $PARAMS | tr " " "_").txt &
 				# Saves PID for the script
@@ -103,8 +104,8 @@ while [ $SIMCOUNT -gt 0 ]; do
 				for METHOD in $(ls run_scripts/tpr_fpr_methods); do
 					STARTED=false
 					while ! $STARTED; do
-						#echo PROCESSES $(ps | grep R | wc -l)
-						if [ $(ps | grep R | wc -l) -lt $PROCMAX ]; then
+						echo PROCESSES $(sh ./run_scripts/get_running_PIDs.sh | wc -l)
+						if [ $(sh ./run_scripts/get_running_PIDs.sh | wc -l) -lt $PROCMAX ]; then
 							Rscript run_scripts/tpr_fpr_methods/$METHOD $SIMTYPE $PARAMS > run_scripts/.output/${METHOD}_$(echo $PARAMS | tr " " "_").txt &
 							echo $! $METHOD $SIMTYPE $PARAMS | tee -a run_scripts/.output/run.txt
 							STARTED=true
