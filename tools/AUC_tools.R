@@ -97,9 +97,9 @@ get_sim_dirs <- function(sim_type, dir = "data") {
 #               (See one_minus below.)
 #   method_name: String to include in tibble in "method" column.
 #   n_DAGs_to_process: Number of DAGs to process.
-#                      Default is to process all 1000 DAGs. 
+#                      Default is to process all DAGs.
 save_tpr_fpr <- function(dir, order_func, method_name,
-                        n_DAGs_to_process = 1000) {
+                        n_DAGs_to_process = Inf) {
     # If there are only 2 observations in some environment, then ICP can't run.
     if (method_name == "ICP" &
         # First checks whether n_obs_each == 2 (for either setup)
@@ -218,7 +218,7 @@ save_tpr_fpr <- function(dir, order_func, method_name,
     }
 
     # Checks whether the total number of DAGs processed matches the n_DAGs_to_process.
-    if (n_DAGs_processed == n_DAGs_to_process) {
+    if (n_DAGs_to_process == Inf, n_DAGs_processed == n_DAGs_to_process) {
         cat(sprintf(
             "\n## Done processing all %d DAGs to process ##\n",
             n_DAGs_processed 
@@ -245,7 +245,7 @@ one_minus <- function(pval_func) {
 # have a file named tpr_fpr_"method_name".rds
 add_missing_tpr_fpr <- function(order_func, method_name,
                                 sim_type = "alltargets",
-                                n_DAGs_to_process = 1000,
+                                n_DAGs_to_process = Inf,
                                 dir = "data") {
     sim_dirs <- get_sim_dirs(sim_type, dir)
 

@@ -103,7 +103,7 @@ sim_alltargets_datasets <- function(DAG_list, n_obs_each, num_interv,
     # Expected total size
     # (the relationship was determined empirically from early
     # simulations)
-    expected_MB_total <- 145 * (n_obs_each * num_interv) / 300 + 11
+    expected_MB_total <- 145 * (n_DAGs * n_obs_each * num_interv) / (300 * 1000) + 11
     expected_MB_per_DAG <- expected_MB_total / n_DAGs
     # Total number of DAGs to include in each file
     # Note that the last file may contain fewer DAGs.
@@ -367,8 +367,8 @@ sim_singletargets_datasets <- function(DAG_list,
                                     max_MB_per_file = 500) {
     n_DAGs <- length(DAG_list)
     expected_MB_total <- 145 *
-                (num_x_interv * n_obs_each * num_interv_each) /
-                300 + 11
+                (n_DAGs * num_x_interv * n_obs_each * num_interv_each) /
+                (300 * 1000) + 11
     expected_MB_per_DAG <- expected_MB_total / n_DAGs
     DAGs_per_file <- min(max(round(max_MB_per_file / expected_MB_per_DAG), 1),
                                 n_DAGs)
@@ -376,8 +376,8 @@ sim_singletargets_datasets <- function(DAG_list,
     num_files_full <- floor(n_DAGs / DAGs_per_file)
     file_cut_points <- cumsum(c(0, rep(DAGs_per_file, num_files_full)))
     if (n_DAGs %% DAGs_per_file != 0) file_cut_points <-
-                                c(file_cut_points, n_DAGs)
-
+                              c(file_cut_points, n_DAGs)
+                        
     # Name of directories contains parameters
     setting_name <- sprintf("singletargets_%d_%d_%d_%d_sdw%d_sdh%d",
                         n_obs_each,
