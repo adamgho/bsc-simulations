@@ -19,9 +19,12 @@ I have only tested the code on GNU/Linux. I assume that it works on macOS as wel
 
 Note: I didn't set a seed for practical reason (starting and stopping simulations many times over several weeks), so you will not get the exact same data and plots.
 
-1. Run `Rscript run_scripts/DAGs1000_nx30_nh30_probconnect04.R` to generate and save a list of the random DAGs used.
-2. Run the script `run_sim_and_tpr_fpr_and_AUC.sh` with a command line argument giving the maximum allowable memory usage in MB, e.g `./run_sim_and_tpr_fpr_and_AUC.sh 50000` to allow a maximum memory usage of 50000 MB (50 GB).
-3. Run `Rscript generate_plots.R`.
+First run `Rscript run_scripts/DAGs1000_nx30_nh30_probconnect04.R` to generate and save a list of the random DAGs used.
+
+Now run the script `./run_scripts/run_in_background.sh <maxMB>` where you replace `<maxMB>` with the maximum allowed memory usage in MB, e.g `./run_sim_and_tpr_fpr_and_AUC.sh 50000` to allow a maximum memory usage of 50000 MB (50 GB). It is quite unprecise so be conservative. (For alternative command line arguments, run it with the `-h` argument.)
+To monitor the running processes you can run `./run_scripts/cont_list_running.sh`. If you have to stop all processes then run `./run_scripts/kill_all.sh`.
+
+Finally run `Rscript run_scripts/generate_plots.R`.
 
 ## Overview
 

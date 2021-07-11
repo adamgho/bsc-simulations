@@ -128,8 +128,13 @@ save_tpr_fpr <- function(dir, order_func, method_name,
         numeric = T
     )
 
+    if (n_DAGs_to_process == Inf) {
+        cat(sprintf("### %s | %d files | %s | will process all DAGs ###\n",
+                dir, length(filenames), method_name))
+    } else {
     cat(sprintf("### %s | %d files | %s | will process %d DAGs ###\n", 
                 dir, length(filenames), method_name, n_DAGs_to_process))
+    }
 
     # Counter to keep track of when enough DAGs have been processed.
     n_DAGs_processed <- 0
@@ -218,7 +223,7 @@ save_tpr_fpr <- function(dir, order_func, method_name,
     }
 
     # Checks whether the total number of DAGs processed matches the n_DAGs_to_process.
-    if (n_DAGs_to_process == Inf, n_DAGs_processed == n_DAGs_to_process) {
+    if (n_DAGs_to_process == Inf | n_DAGs_processed == n_DAGs_to_process) {
         cat(sprintf(
             "\n## Done processing all %d DAGs to process ##\n",
             n_DAGs_processed 

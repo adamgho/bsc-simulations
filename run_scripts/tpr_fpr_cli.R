@@ -1,5 +1,5 @@
 save_tpr_fpr_cli_args <- function(order_func, method_name,
-                                    n_DAGs_to_process)
+                                    n_DAGs_to_process = Inf)
 {
     args <- commandArgs(trailingOnly = TRUE)
     sim_type <- args[1]
@@ -12,8 +12,7 @@ save_tpr_fpr_cli_args <- function(order_func, method_name,
                     params[1], params[2], params[3],
                     params[4], params[5], params[6])
     }
-
-    if (!file.exists(paste(dir, "/tpr_fpr_", method_name, ".rds", sep = ""))) {
+    if (dir.exists(dir) & !file.exists(paste(dir, "/tpr_fpr_", method_name, ".rds", sep = ""))) {
         source("tools/AUC_tools.R")
         save_tpr_fpr(dir, order_func, method_name,
                         n_DAGs_to_process)
