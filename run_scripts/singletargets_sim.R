@@ -18,4 +18,4 @@ if (!dir.exists(sprintf("data/singletargets_%d_%d_%d_%d_sdw%d_sdh%d",
         params[1], params[2], params[3], params[4], params[5], params[6],
         dir = "data/", max_MB_per_file = 500
     )
-} 
+}

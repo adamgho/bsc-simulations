@@ -111,7 +111,7 @@ randomDAG <- function(p,probConnect,causalOrder = sample(p,p,replace=FALSE))
   # Original unadapted version written by Jonas Peters:
   # Copyright (c) 2010 - 2012  Jonas Peters  [peters@stat.math.ethz.ch]
   #    
-  # All rights reserved.  See the file COPYING for license terms. 
+  # All rights reserved.  See the file LICENSE.md for license terms. 
   # 
   #
   # simulates a directed acyclic graph (DAG) and returns its adjacency matrix

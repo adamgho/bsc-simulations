@@ -23,15 +23,16 @@ wide_AUC <- function(AUC_tib) {
 }
 
 
-AUC_singletargets <- tibble(readRDS("data/AUC_singletargets.rds")) 
-AUC_singletargets_wide <- wide_AUC(AUC_singletargets)
+AUC_alltargets <- tibble(readRDS("data/AUC_alltargets.rds")) 
+AUC_alltargets_wide <- wide_AUC(AUC_alltargets)
 
 AUC_alltargets <- tibble(readRDS("data/AUC_alltargets.rds"))
 AUC_alltargets_wide <- wide_AUC(AUC_alltargets)
 
+### Singletargets
 
-# singletargets, varying num_interv_each.
-AUC_singletargets_wide %>% 
+# alltargets, varying num_interv_each.
+AUC_alltargets_wide %>% 
     filter(n_obs_control == 100,
             num_x_interv == 15,
             shift_noise_sd == 7,
@@ -55,6 +56,40 @@ Shift noise sd: 7.
 Hiddens sd: 5"
     )
 
+# alltargets, varying sdw
+AUC_alltargets_wide %>% 
+    filter(
+        n_obs_each == 2,
+        num_interv_each == 2000,
+        num_x_interv == 15,
+        n_obs_control == 100,
+        sd_hiddens == 5
+    ) %>% 
+    ggplot(aes(x = shift_noise_sd,
+                y = AUC_mean,
+                col = method)) +
+    geom_point() +
+    geom_line() +
+    facet_wrap(~ type)
+
+# alltargets, varying sdh
+AUC_alltargets_wide %>% 
+    filter(
+        n_obs_each == 2,
+        num_interv_each == 2000,
+        num_x_interv == 15,
+        n_obs_control == 100,
+        shift_noise_sd == 7
+    ) %>% 
+    ggplot(aes(x = sd_hiddens,
+                y = AUC_mean,
+                col = method)) +
+    geom_point() +
+    geom_line() +
+    facet_wrap(~ type)
+
+### alltargets
+
 # alltargets, varying num_interv.
 AUC_alltargets_wide %>% 
     filter(shift_noise_sd == 7,
@@ -64,6 +99,35 @@ AUC_alltargets_wide %>%
     geom_line() +
     geom_point() +
     facet_grid(n_obs_each ~ type)
+
+# alltargets, varying sdw
+AUC_alltargets_wide %>% 
+    filter(
+        n_obs_each == 10,
+        num_interv == 500,
+        sd_hiddens == 5
+    ) %>% 
+    ggplot(aes(x = shift_noise_sd,
+                y = AUC_mean,
+                col = method)) +
+    geom_point() +
+    geom_line() +
+    facet_wrap(~ type)
+
+# alltargets, varying sdh
+AUC_alltargets_wide %>% 
+    filter(
+        n_obs_each == 10,
+        num_interv == 500,
+        shift_noise_sd == 7
+    ) %>% 
+    ggplot(aes(x = sd_hiddens,
+                y = AUC_mean,
+                col = method)) +
+    geom_point() +
+    geom_line() +
+    facet_wrap(~ type)
+
 
 # ROC curve for an example
 
@@ -78,6 +142,13 @@ tpr_fpr_tib <- tibble(readRDS("data/alltargets_10_500_sdw7_sdh5/tpr_fpr_DPOLS-co
 length(unique(tpr_fpr_tib$DAG_id))
 tpr_fpr_tib$DAG_id
 ROC_tib <- tibble(readRDS("data/alltargets_2_20_sdw7_sdh5/ROC_points.rds"))
+
+ggplot(ROC_tib, aes(x = fpr_anc_mean, y = tpr_anc_mean, col = method)) +
+    geom_point() +
+    geom_line() +
+    geom_abline(lty = 2)
+
+ROC_tib <- tibble(readRDS("data/alltargets_2_2000_15_100_sdw7_sdh5/ROC_points.rds"))
 
 ggplot(ROC_tib, aes(x = fpr_anc_mean, y = tpr_anc_mean, col = method)) +
     geom_point() +

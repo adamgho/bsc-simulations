@@ -42,7 +42,7 @@ p_values_DPOLS <- function(dat) {
   cp <- solve(crossprod(dat$X, dat$X_tilde))
   std_errors <- sigma * sqrt(diag(cp %*% crossprod(dat$X) %*% t(cp)))
   t <- as.vector(beta_DPOLS(dat) / std_errors)
-  pt(t, df = nrow(dat$X) - ncol(dat$X), lower.tail = F)
+  2 * pt(abs(t), df = nrow(dat$X) - ncol(dat$X), lower.tail = F)
 }
 
 
