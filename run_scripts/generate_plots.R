@@ -26,18 +26,19 @@ wide_AUC <- function(AUC_tib) {
 AUC_alltargets <- tibble(readRDS("data/AUC_alltargets.rds")) 
 AUC_alltargets_wide <- wide_AUC(AUC_alltargets)
 
-AUC_alltargets <- tibble(readRDS("data/AUC_alltargets.rds"))
-AUC_alltargets_wide <- wide_AUC(AUC_alltargets)
+AUC_singletargets <- tibble(readRDS("data/AUC_singletargets.rds"))
+AUC_singletargets_wide <- wide_AUC(AUC_singletargets)
 
 ### Singletargets
 
-# alltargets, varying num_interv_each.
-AUC_alltargets_wide %>% 
+# singletargets, varying num_interv_each.
+AUC_singletargets_wide %>% 
     filter(n_obs_control == 100,
             num_x_interv == 15,
             shift_noise_sd == 7,
             sd_hiddens == 5,
-            n_obs_each %in% c(2, 10)) %>% 
+            n_obs_each %in% c(2, 10),
+            num_interv_each <= 2500) %>% 
     ggplot(aes(x = num_interv_each,
                 y = AUC_mean,
                 col = method)) +
@@ -56,8 +57,8 @@ Shift noise sd: 7.
 Hiddens sd: 5"
     )
 
-# alltargets, varying sdw
-AUC_alltargets_wide %>% 
+# singletargets, varying sdw
+AUC_singletargets_wide %>% 
     filter(
         n_obs_each == 2,
         num_interv_each == 2000,
@@ -72,8 +73,8 @@ AUC_alltargets_wide %>%
     geom_line() +
     facet_wrap(~ type)
 
-# alltargets, varying sdh
-AUC_alltargets_wide %>% 
+# singletargets, varying sdh
+AUC_singletargets_wide %>% 
     filter(
         n_obs_each == 2,
         num_interv_each == 2000,
@@ -154,3 +155,37 @@ ggplot(ROC_tib, aes(x = fpr_anc_mean, y = tpr_anc_mean, col = method)) +
     geom_point() +
     geom_line() +
     geom_abline(lty = 2)
+
+
+ROC_tib <- tibble(readRDS("data/singletargets_2_10000_30_10000_sdw7_sdh5/ROC_points.rds"))
+
+ggplot(ROC_tib, aes(x = fpr_anc_mean, y = tpr_anc_mean, col = method)) +
+    geom_point() +
+    geom_line() +
+    geom_abline(lty = 2)
+
+ggplot(ROC_tib, aes(x = fpr_pa_mean, y = tpr_pa_mean, col = method)) +
+    geom_point() +
+    geom_line() +
+    geom_abline(lty = 2)
+
+
+get_ROC_curves <- function(setting_name) {
+    ROC_tib <- tibble(readRDS(str_c('data/', setting_name, '/ROC_points.rds')))
+
+    list(ggplot(ROC_tib, aes(x = fpr_anc_mean, y = tpr_anc_mean, col = method)) +
+        geom_point() +
+        geom_line() +
+        geom_abline(lty = 2),
+    ggplot(ROC_tib, aes(x = fpr_pa_mean, y = tpr_pa_mean, col = method)) +
+        geom_point() +
+        geom_line() +
+        geom_abline(lty = 2))
+}
+
+sl <- get_ROC_curves('singletargets_2_10000_30_10000_sdw7_sdh5')
+ss <- get_ROC_curves('singletargets_2_10000_15_10000_sdw7_sdh5')
+sl[1]
+ss[1]
+ss[2]
+sl[2]
