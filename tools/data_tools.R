@@ -19,7 +19,7 @@ sim_alltargets <- function(DAG_data,
                           num_interv,
                           shift_noise_sd,
                           sd_hiddens) {
-  # The i'th element of n_obs contains the number of observations
+### The i'th element of n_obs contains the number of observations
 # of the i'th setting.
   n_obs <- rep(n_obs_each, num_interv)
   num_var <- nrow(DAG_data$B)

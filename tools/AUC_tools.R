@@ -266,110 +266,57 @@ add_missing_tpr_fpr <- function(order_func, method_name,
     }
 }
 
-# Gives first quartile
+## Gives first quartile
 quartile1 <- function(x) quantile(x, 0.25)
-# Gives third quartile
+## Gives third quartile
 quartile3 <- function(x) quantile(x, 0.75)
 
-# Generates points for ROC curves.
-# For each combination of method and n_selected it finds the
-# mean  and quartiles of true- and false positive rates.
-# Saves results in files named ROC_points.rds
-save_ROC_points <- function(dir) {
-    cat(sprintf("\n### ROC: %s ###\n", dir))
+save_AUC <- function(dir) {
+    cat(sprintf("\n### AUC: %s ###\n", dir))
 
-    # Collects all tpr_fpr_method.rds tibbles in one tibble tpr_fpr.rds
+    ## Collects all tpr_fpr_method.rds tibbles in one tibble tpr_fpr.rds
     tib <- tibble()
     tpr_fpr_files <- list.files(dir, pattern = "tpr_fpr_")
     for (tpr_fpr_file in tpr_fpr_files) {
         tib <- rbind(tib, readRDS(str_c(dir, "/", tpr_fpr_file)))
     }
+    ## If dir doesn't contain any rds files starting with 'tpr_fpr_' return 1
+    ## and exit.
     if (nrow(tib) == 0) {
         cat("No tpr_fpr files. Skipping.\n")
         return(1)
     }
     saveRDS(tib, str_c(dir, "/tpr_fpr.rds"))
 
-    # Calculates mean, median, 1st quartile, and 3rd quartile of
-    # all tpr_fpr numbers.
-    # Saves in ROC_points.rds.
+    ## Computes AUC for each DAG
     tib %>%
-        group_by(method, n_select) %>%
-        summarise(across(
-            .cols = 1:4,
-            .fns = list(
-                mean = mean,
-                median = median,
-                q1 = quartile1,
-                q3 = quartile3
-            )
-        ),
-        .groups = "drop"
-        ) %>%
-        saveRDS(str_c(dir, "/ROC_points.rds"))
+        group_by(DAG_id, method) %>%
+        summarise(AUC_anc = get_AUC(tpr_anc, fpr_anc),
+                  AUC_pa = get_AUC(tpr_pa, fpr_pa),
+                  .groups = 'drop') ->
+        all_AUC
+    saveRDS(str_c(dir, '/all_AUC.rds'))
+
+    ## Takes average of all AUC (across all DAGs)
+    all_AUC %>%
+        group_by(method) %>%
+        summarise(pa_mean = mean(AUC_pa),
+                  anc_mean = mean(AUC_anc),
+                  pa_median = median(AUC_pa),
+                  anc_median = median(AUC_anc),
+                  pa_quartile3 = quartile3(AUC_pa),
+                  anc_quartile3 = quartile3(AUC_anc),
+                  pa_quartile1 = quartile1(AUC_pa),
+                  anc_quartile1 = quartile1(AUC_anc),                  
+                  .groups = 'drop') %>%
+        pivot_longer(cols = -1,
+                     names_to = c('type', 'measure'),
+                     names_sep = '_',
+                     values_to = 'AUC') ->
+        saveRDS(str_c(dir, '/AUC.rds'))
 }
 
-# Runs save_ROC_points on all data-directories in dir
-add_missing_ROC_points <- function(sim_type = "alltargets", dir = "data/") {
-    sim_dirs <- get_sim_dirs(sim_type, dir)
-
-    for (sim_dir in sim_dirs) {
-        save_ROC_points(str_c(dir, "/", sim_dir))
-    }
-}
-
-# Calculates AUC from ROC points in the sim-directory dir and saves the
-# AUC in a new file dir/AUC.rds.
-# If there is no file  dir/ROC_points.rds it returns 1 (warning).
-save_AUC <- function(dir) {
-    cat(sprintf("\n### AUC: %s ###\n", dir))
-
-    # Checks whether the file dir/ROC_points exists.
-    # If not: Return 1.
-    if (!file.exists(str_c(dir, "/ROC_points.rds"))) {
-        cat("No ROC_points.rds file. Skipping.\n")
-        return(1)
-    }
-    # Reads dir/ROC_points.rds
-    tib <- readRDS(str_c(dir, "/ROC_points.rds"))
-    # Suffixes of tpr and fpr, e.g _anc_mean or _pa_median
-    suffixes <- na.omit(str_extract(
-        colnames(tib),
-        "(?<=tpr_)[a-z]+_[a-z0-9]+$"
-    ))
-    n_suffixes <- length(suffixes)
-    # Counts index reached in AUC_vec
-    index_count <- 1 
-    methods <- levels(tib$method)
-    # Vector to contain results
-    AUC_vec <- rep(NA, n_suffixes * length(methods))
-    # Loops through different methods and calculates AUC for each suffix
-    # e.g for anc_mean (ancestors, mean of tpr/fpr) and so on.
-    for (i in 1:length(methods)) {
-        tib_method <- filter(tib, method == methods[i])
-        for (k in 1:n_suffixes) {
-            AUC_vec[index_count] <-
-                get_AUC(
-                    tib_method[[str_c("tpr_", suffixes[k])]],
-                    tib_method[[str_c("fpr_", suffixes[k])]]
-                )
-            index_count <- index_count + 1
-        }
-    }
-    # Saves results in tibble also including the method, and the suffix split
-    # into type (anc or pa) and measure (e.g mean or median).
-    expand.grid(
-        list(
-            suffix = suffixes,
-            method = methods
-        )
-    ) %>%
-        mutate(AUC = AUC_vec) %>%
-        separate(suffix, c("type", "measure"), sep = "_") %>%
-        saveRDS(str_c(dir, "/AUC.rds"))
-}
-
-# Runs save_AUC on all data directories in dir.
+## Runs save_AUC on all data directories in dir.
 add_missing_AUC <- function(sim_type = "alltargets", dir = "data/") {
     sim_dirs <- get_sim_dirs(sim_type, dir)
 
