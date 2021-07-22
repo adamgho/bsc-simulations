@@ -12,9 +12,13 @@ theme_set(
     plot.background = element_rect(fill = "transparent",colour = NA),
     legend.background = element_rect(fill="transparent", colour=NA),
     legend.key        = element_rect(fill="transparent", colour=NA),
-    strip.background = element_rect(fill = "transparent",colour = NA)
+    strip.background = element_rect(fill = "transparent",colour = NA),
+    legend.position = 'bottom'
   )
 )
+
+imw <- 14
+imh <- 20
 
 wide_AUC <- function(AUC_tib) {
     pivot_wider(AUC_tib, names_from = measure,
@@ -30,6 +34,394 @@ AUC_singletargets <- tibble(readRDS("data/AUC_singletargets.rds"))
 AUC_singletargets_wide <- wide_AUC(AUC_singletargets)
 
 ### Singletargets
+
+# singletargets_2_X_Y_2X_sdw7_sdh5 where Y in {15, 30}
+
+AUC_singletargets_wide %>% 
+    filter(num_x_interv %in% c(15, 30),
+           shift_noise_sd == 7,
+            sd_hiddens == 5,
+            n_obs_each == 2,
+            n_obs_control == 2 * num_interv_each) %>% 
+    ggplot(aes(x = num_interv_each,
+                y = AUC_mean,
+                col = method)) +
+    geom_line() +
+    geom_point() +
+    facet_grid(num_x_interv ~ type) +
+    labs(
+        x = "Number of interventions per X intervened on.",
+        y = "Average AUC",
+        title =
+"
+Singletargets.
+Number of control observations: 2x.
+Shift noise sd: 7.
+Hiddens sd: 5"
+)
+
+ggsave('figures/singletargets_2_x_y_2x_sdw7_sdh5.pdf',
+       width = imw,
+       height = imh,
+       units = 'cm')
+
+
+# singletargets_10_X_Y_10X_sdw7_sdh5 where Y in {15, 30}
+
+AUC_singletargets_wide %>% 
+    filter(num_x_interv %in% c(15, 30),
+           shift_noise_sd == 7,
+            sd_hiddens == 5,
+            n_obs_each == 10,
+            n_obs_control == 10 * num_interv_each) %>% 
+    ggplot(aes(x = num_interv_each,
+                y = AUC_mean,
+                col = method)) +
+    geom_line() +
+    geom_point() +
+    facet_grid(num_x_interv ~ type) +
+    labs(
+        x = "Number of interventions per X intervened on.",
+        y = "Average AUC",
+        title =
+"
+Singletargets.
+Number of control observations: 10x.
+Shift noise sd: 7.
+Hiddens sd: 5"
+)
+
+ggsave('figures/singletargets_10_x_y_10x_sdw7_sdh5.pdf',
+       width = imw,
+       height = imh,
+       units = 'cm')
+
+
+
+### alltargets
+
+                                        # alltargets_y_x_sdw7_sdh5
+AUC_alltargets_wide %>% 
+    filter(shift_noise_sd == 7,
+            sd_hiddens == 5,
+            n_obs_each %in% c(2, 10)) %>% 
+    ggplot(aes(x = num_interv, y = AUC_mean, col = method)) +
+    geom_line() +
+    geom_point() +
+    facet_grid(n_obs_each ~ type) +
+       labs(
+        x = "Number of environments",
+        y = "Average AUC",
+        title =
+"
+alltargets.
+# obs per environment: 2 resp. 10.
+Shift noise sd: 7.
+Hiddens sd: 5"
+)
+
+ggsave('figures/alltargets_y_x_sdw7_sdh5.pdf',
+       width = imw,
+       height = imh,
+       units = 'cm')
+
+
+
+                                        # alltargets_x_500_sdw7_sdh5
+AUC_alltargets_wide %>% 
+    filter(shift_noise_sd == 7,
+            sd_hiddens == 5,
+           num_interv == 500) %>% 
+    ggplot(aes(x = n_obs_each, y = AUC_mean, col = method)) +
+    geom_line() +
+    geom_point() +
+    facet_wrap(~ type) +
+       labs(
+        x = "Number of observations per environment",
+        y = "Average AUC",
+        title =
+"
+alltargets.
+Number of environments: 500.
+Shift noise sd: 7.
+Hiddens sd: 5"
+)
+
+ggsave('figures/alltargets_x_500_sdw7_sdh5.pdf',
+       width = imw,
+       height = imh,
+       units = 'cm')
+
+
+# alltargets, 5000 obs, varying both n_obs_each and num_interv
+AUC_alltargets_wide %>% 
+    filter(
+        n_obs_each * num_interv == 5000,
+        shift_noise_sd == 7,
+        sd_hiddens == 5
+    ) %>% 
+    ggplot(aes(x = num_interv / n_obs_each,
+                y = AUC_mean,
+                col = method)) +
+    geom_point() +
+    geom_line() +
+    facet_wrap(~ type) +
+       labs(
+        x = "#environments/#obsservations per environment",
+        y = "Average AUC",
+        title =
+"
+alltargets.
+Total number of observations: 5000.
+Shift noise sd: 7.
+Hiddens sd: 5."
+)
+
+ggsave('figures/alltargets_5000obs.pdf',
+       width = imw,
+       height = imh,
+       units = 'cm')
+
+
+
+# alltargets_10_500_sdwx_sdh5
+AUC_alltargets_wide %>% 
+    filter(
+        n_obs_each == 10,
+        num_interv == 500,
+        sd_hiddens == 5
+    ) %>% 
+    ggplot(aes(x = shift_noise_sd,
+                y = AUC_mean,
+                col = method)) +
+    geom_point() +
+    geom_line() +
+    facet_wrap(~ type) +
+       labs(
+        x = "Shift noise sd",
+        y = "Average AUC",
+        title =
+"
+alltargets.
+#observations per environment: 10
+#environments: 500
+Hiddens sd: 5."
+)
+
+ggsave('figures/alltargets_10_500_sdwx_sdh5.pdf',
+       width = imw,
+       height = imh,
+       units = 'cm')
+
+
+# alltargets_10_500_sdw7_sdhx
+AUC_alltargets_wide %>% 
+    filter(
+        n_obs_each == 10,
+        num_interv == 500,
+        shift_noise_sd == 7
+    ) %>% 
+    ggplot(aes(x = sd_hiddens,
+                y = AUC_mean,
+                col = method)) +
+    geom_point() +
+    geom_line() +
+    facet_wrap(~ type) +
+           labs(
+        x = "Hiddens sd",
+        y = "Average AUC",
+        title =
+"
+alltargets.
+#observations per environment: 10
+#environments: 500
+Shift noise sd: 7."
+)
+
+ggsave('figures/alltargets_10_500_sdw7_sdhx.pdf',
+       width = imw,
+       height = imh,
+       units = 'cm')
+
+
+# alltargets_2_2500_sdwx_sdh5
+
+AUC_alltargets_wide %>% 
+    filter(
+        n_obs_each == 2,
+        num_interv == 2500,
+        sd_hiddens == 5
+    ) %>% 
+    ggplot(aes(x = shift_noise_sd,
+                y = AUC_mean,
+                col = method)) +
+    geom_point() +
+    geom_line() +
+    facet_wrap(~ type) +
+       labs(
+        x = "Shift noise sd",
+        y = "Average AUC",
+        title =
+"
+alltargets.
+#observations per environment: 2
+#environments: 2500
+Hiddens sd: 5."
+)
+
+ggsave('figures/alltargets_2_2500_sdwx_sdh5.pdf',
+       width = imw,
+       height = imh,
+       units = 'cm')
+
+
+# alltargets_2_2500_sdw7_sdhx
+
+AUC_alltargets_wide %>% 
+    filter(
+        n_obs_each == 10,
+        num_interv == 500,
+        shift_noise_sd == 7
+    ) %>% 
+    ggplot(aes(x = sd_hiddens,
+                y = AUC_mean,
+                col = method)) +
+    geom_point() +
+    geom_line() +
+    facet_wrap(~ type) +
+       labs(
+        x = "Hiddens sd",
+        y = "Average AUC",
+        title =
+"
+alltargets.
+#observations per environment: 2
+#environments: 2500
+Shift noise sd: 7."
+)
+
+ggsave('figures/alltargets_2_2500_sdw7_sdhx.pdf',
+       width = imw,
+       height = imh,
+       units = 'cm')
+
+
+
+# ROC curve for an example
+
+get_ROC_curves <- function(setting_name) {
+    ROC_tib <- tibble(readRDS(str_c('data/', setting_name, '/ROC_points.rds')))
+
+    list(ggplot(ROC_tib, aes(x = fpr_anc_mean, y = tpr_anc_mean, col = method)) +
+        geom_point() +
+        geom_line() +
+        geom_abline(lty = 2),
+    ggplot(ROC_tib, aes(x = fpr_pa_mean, y = tpr_pa_mean, col = method)) +
+        geom_point() +
+        geom_line() +
+        geom_abline(lty = 2))
+}
+
+# ROC curve to compare with ICP for alltargets_200_500
+icp <- get_ROC_curves('alltargets_200_500_sdw7_sdh5')
+icp[1]
+icp[2]
+
+### Not to be included
+                                        # singletargets, varying sdw
+AUC_singletargets_wide %>% 
+    filter(
+        n_obs_each == 2,
+        num_interv_each == 2000,
+        num_x_interv == 15,
+        n_obs_control == 100,
+        sd_hiddens == 5
+    ) %>% 
+    ggplot(aes(x = shift_noise_sd,
+                y = AUC_mean,
+                col = method)) +
+    geom_point() +
+    geom_line() +
+    facet_wrap(~ type)
+
+                                        # singletargets, varying sdh
+AUC_singletargets_wide %>% 
+    filter(
+        n_obs_each == 2,
+        num_interv_each == 2000,
+        num_x_interv == 15,
+        n_obs_control == 100,
+        shift_noise_sd == 7
+    ) %>% 
+    ggplot(aes(x = sd_hiddens,
+                y = AUC_mean,
+                col = method)) +
+    geom_point() +
+    geom_line() +
+    facet_wrap(~ type)
+
+
+                                        # Compare with ICP for alltargets_10_X
+AUC_alltargets_wide %>% 
+    filter(shift_noise_sd == 7,
+            sd_hiddens == 5,
+           n_obs_each == 10,
+           num_interv <= 10000) %>% 
+    ggplot(aes(x = num_interv, y = AUC_mean, col = method)) +
+    geom_line() +
+    geom_point() +
+    facet_grid(n_obs_each ~ type)
+
+
+                                        # singletagets_10_?_15_100_sdw7_sdh5 to compare ICP
+AUC_singletargets_wide %>% 
+    filter(num_x_interv == 15,
+           shift_noise_sd == 7,
+            sd_hiddens == 5,
+            n_obs_each == 10,
+           n_obs_control == 100,
+           num_interv_each <= 500) %>% 
+    ggplot(aes(x = num_interv_each,
+                y = AUC_mean,
+                col = method)) +
+    geom_line() +
+    geom_point() +
+    facet_grid(num_x_interv ~ type) +
+    labs(
+        x = "Number of interventions per X intervened on.",
+        y = "Average AUC",
+        title =
+"
+Singletargets.
+Control obs: 2x.
+Shift noise sd: 7.
+Hiddens sd: 5"
+)
+
+                                        # singletagets_10_?_30_100_sdw7_sdh5 to compare ICP
+AUC_singletargets_wide %>% 
+    filter(num_x_interv == 30,
+           shift_noise_sd == 7,
+            sd_hiddens == 5,
+            n_obs_each == 10,
+           n_obs_control == 100,
+           num_interv_each <= 500) %>% 
+    ggplot(aes(x = num_interv_each,
+                y = AUC_mean,
+                col = method)) +
+    geom_line() +
+    geom_point() +
+    facet_grid(num_x_interv ~ type) +
+    labs(
+        x = "Number of interventions per X intervened on.",
+        y = "Average AUC",
+        title =
+"
+Singletargets.
+Control obs: 2x.
+Shift noise sd: 7.
+Hiddens sd: 5"
+)
 
 # singletargets, varying num_interv_each.
 # 30 x interv, 100 obs control
@@ -135,239 +527,3 @@ Shift noise sd: 7.
 Hiddens sd: 5"
     )
 
-
-# singletargets_2_X_Y_X_sdw7_sdh5 where Y in {15, 30}
-
-AUC_singletargets_wide %>% 
-    filter(num_x_interv %in% c(15, 30),
-           shift_noise_sd == 7,
-            sd_hiddens == 5,
-            n_obs_each == 2,
-            n_obs_control == 2 * num_interv_each) %>% 
-    ggplot(aes(x = num_interv_each,
-                y = AUC_mean,
-                col = method)) +
-    geom_line() +
-    geom_point() +
-    facet_grid(num_x_interv ~ type) +
-    labs(
-        x = "Number of interventions per X intervened on.",
-        y = "Average AUC",
-        title =
-"
-Singletargets.
-Control obs: 2x.
-Shift noise sd: 7.
-Hiddens sd: 5"
-)
-
-                                        # singletagets_10_?_15_100_sdw7_sdh5 to compare ICP
-AUC_singletargets_wide %>% 
-    filter(num_x_interv == 15,
-           shift_noise_sd == 7,
-            sd_hiddens == 5,
-            n_obs_each == 10,
-           n_obs_control == 100,
-           num_interv_each <= 500) %>% 
-    ggplot(aes(x = num_interv_each,
-                y = AUC_mean,
-                col = method)) +
-    geom_line() +
-    geom_point() +
-    facet_grid(num_x_interv ~ type) +
-    labs(
-        x = "Number of interventions per X intervened on.",
-        y = "Average AUC",
-        title =
-"
-Singletargets.
-Control obs: 2x.
-Shift noise sd: 7.
-Hiddens sd: 5"
-)
-
-                                        # singletagets_10_?_30_100_sdw7_sdh5 to compare ICP
-AUC_singletargets_wide %>% 
-    filter(num_x_interv == 30,
-           shift_noise_sd == 7,
-            sd_hiddens == 5,
-            n_obs_each == 10,
-           n_obs_control == 100,
-           num_interv_each <= 500) %>% 
-    ggplot(aes(x = num_interv_each,
-                y = AUC_mean,
-                col = method)) +
-    geom_line() +
-    geom_point() +
-    facet_grid(num_x_interv ~ type) +
-    labs(
-        x = "Number of interventions per X intervened on.",
-        y = "Average AUC",
-        title =
-"
-Singletargets.
-Control obs: 2x.
-Shift noise sd: 7.
-Hiddens sd: 5"
-)
-
-
-### alltargets
-
-                                        # alltargets, varying num_interv.
-AUC_alltargets_wide %>% 
-    filter(shift_noise_sd == 7,
-            sd_hiddens == 5,
-            n_obs_each %in% c(2, 10)) %>% 
-    ggplot(aes(x = num_interv, y = AUC_mean, col = method)) +
-    geom_line() +
-    geom_point() +
-    facet_grid(n_obs_each ~ type)
-
-
-                                        # Compare with ICP for alltargets_10_X
-AUC_alltargets_wide %>% 
-    filter(shift_noise_sd == 7,
-            sd_hiddens == 5,
-           n_obs_each == 10,
-           num_interv <= 10000) %>% 
-    ggplot(aes(x = num_interv, y = AUC_mean, col = method)) +
-    geom_line() +
-    geom_point() +
-    facet_grid(n_obs_each ~ type)
-
-
-                                        # alltargets, varying n_obs_each.
-AUC_alltargets_wide %>% 
-    filter(shift_noise_sd == 7,
-            sd_hiddens == 5,
-            num_interv == 500) %>% 
-    ggplot(aes(x = n_obs_each, y = AUC_mean, col = method)) +
-    geom_line() +
-    geom_point() +
-    facet_grid(n_obs_each ~ type)
-
-# alltargets, 5000 obs, varying both n_obs_each and num_interv
-AUC_alltargets_wide %>% 
-    filter(
-        n_obs_each * num_interv == 5000,
-        shift_noise_sd == 7,
-        sd_hiddens == 5
-    ) %>% 
-    ggplot(aes(x = num_interv / n_obs_each,
-                y = AUC_mean,
-                col = method)) +
-    geom_point() +
-    geom_line() +
-    facet_wrap(~ type)
-
-# alltargets, varying sdw
-AUC_alltargets_wide %>% 
-    filter(
-        n_obs_each == 10,
-        num_interv == 500,
-        sd_hiddens == 5
-    ) %>% 
-    ggplot(aes(x = shift_noise_sd,
-                y = AUC_mean,
-                col = method)) +
-    geom_point() +
-    geom_line() +
-    facet_wrap(~ type)
-
-
-# alltargets, varying sdh
-AUC_alltargets_wide %>% 
-    filter(
-        n_obs_each == 10,
-        num_interv == 500,
-        shift_noise_sd == 7
-    ) %>% 
-    ggplot(aes(x = sd_hiddens,
-                y = AUC_mean,
-                col = method)) +
-    geom_point() +
-    geom_line() +
-    facet_wrap(~ type)
-
-# alltargets_2, varying sdw
-AUC_alltargets_wide %>% 
-    filter(
-        n_obs_each == 2,
-        num_interv == 2500,
-        sd_hiddens == 5
-    ) %>% 
-    ggplot(aes(x = shift_noise_sd,
-                y = AUC_mean,
-                col = method)) +
-    geom_point() +
-    geom_line() +
-    facet_wrap(~ type)
-
-
-# alltargets_2, varying sdh
-AUC_alltargets_wide %>% 
-    filter(
-        n_obs_each == 10,
-        num_interv == 500,
-        shift_noise_sd == 7
-    ) %>% 
-    ggplot(aes(x = sd_hiddens,
-                y = AUC_mean,
-                col = method)) +
-    geom_point() +
-    geom_line() +
-    facet_wrap(~ type)
-
-# ROC curve for an example
-
-get_ROC_curves <- function(setting_name) {
-    ROC_tib <- tibble(readRDS(str_c('data/', setting_name, '/ROC_points.rds')))
-
-    list(ggplot(ROC_tib, aes(x = fpr_anc_mean, y = tpr_anc_mean, col = method)) +
-        geom_point() +
-        geom_line() +
-        geom_abline(lty = 2),
-    ggplot(ROC_tib, aes(x = fpr_pa_mean, y = tpr_pa_mean, col = method)) +
-        geom_point() +
-        geom_line() +
-        geom_abline(lty = 2))
-}
-
-# ROC curve to compare with ICP for alltargets_200_500
-icp <- get_ROC_curves('alltargets_200_500_sdw7_sdh5')
-icp[1]
-icp[2]
-
-### Not to be included
-                                        # singletargets, varying sdw
-AUC_singletargets_wide %>% 
-    filter(
-        n_obs_each == 2,
-        num_interv_each == 2000,
-        num_x_interv == 15,
-        n_obs_control == 100,
-        sd_hiddens == 5
-    ) %>% 
-    ggplot(aes(x = shift_noise_sd,
-                y = AUC_mean,
-                col = method)) +
-    geom_point() +
-    geom_line() +
-    facet_wrap(~ type)
-
-                                        # singletargets, varying sdh
-AUC_singletargets_wide %>% 
-    filter(
-        n_obs_each == 2,
-        num_interv_each == 2000,
-        num_x_interv == 15,
-        n_obs_control == 100,
-        shift_noise_sd == 7
-    ) %>% 
-    ggplot(aes(x = sd_hiddens,
-                y = AUC_mean,
-                col = method)) +
-    geom_point() +
-    geom_line() +
-    facet_wrap(~ type)
