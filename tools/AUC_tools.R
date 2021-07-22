@@ -295,7 +295,7 @@ save_AUC <- function(dir) {
                   AUC_pa = get_AUC(tpr_pa, fpr_pa),
                   .groups = 'drop') ->
         all_AUC
-    saveRDS(str_c(dir, '/all_AUC.rds'))
+    saveRDS(all_AUC, str_c(dir, '/all_AUC.rds'))
 
     ## Takes average of all AUC (across all DAGs)
     all_AUC %>%
@@ -312,7 +312,7 @@ save_AUC <- function(dir) {
         pivot_longer(cols = -1,
                      names_to = c('type', 'measure'),
                      names_sep = '_',
-                     values_to = 'AUC') ->
+                     values_to = 'AUC') %>%
         saveRDS(str_c(dir, '/AUC.rds'))
 }
 
