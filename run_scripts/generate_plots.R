@@ -110,6 +110,11 @@ AUC_alltargets_wide %>%
     ggplot(aes(x = num_interv, y = AUC_mean, col = method)) +
     geom_line() +
     geom_point() +
+    geom_ribbon(aes(ymin = AUC_quartile1,
+                    ymax = AUC_quartile3,
+                    fill = method),
+                alpha = 0.1,
+                col = 0) +
     facet_grid(n_obs_each ~ type) +
        labs(
         x = "Number of environments",
@@ -338,18 +343,28 @@ Hiddens sd: 5"
 
 # ROC curve for an example
 
-get_ROC_curves <- function(setting_name) {
-    ROC_tib <- tibble(readRDS(str_c('data/', setting_name, '/ROC_points.rds')))
 
-    list(ggplot(ROC_tib, aes(x = fpr_anc_mean, y = tpr_anc_mean, col = method)) +
-        geom_point() +
-        geom_line() +
-        geom_abline(lty = 2),
-    ggplot(ROC_tib, aes(x = fpr_pa_mean, y = tpr_pa_mean, col = method)) +
-        geom_point() +
-        geom_line() +
-        geom_abline(lty = 2))
+get_ROC_curves <- function(setting_name, id) {
+    tibble(readRDS(str_c('data/small/', setting_name, '/tpr_fpr.rds'))) %>%
+        filter(DAG_id == id) ->
+        tpr_fpr_tib
+    
+    list(ggplot(tpr_fpr_tib, aes(x = fpr_anc, y = tpr_anc, col = method)) +
+         geom_point() +
+         geom_line() +
+         geom_abline(lty = 2) +
+         facet_wrap(~ method),
+         ggplot(tpr_fpr_tib, aes(x = fpr_pa, y = tpr_pa, col = method)) +
+         geom_point() +
+         geom_line() +
+         geom_abline(lty = 2) +
+         facet_wrap(~ method)
+    )
 }
+
+rc <- get_ROC_curves('alltargets_10_500_sdw7_sdh5', 3)
+rc[1]
+rc[2]
 
 # ROC curve to compare with ICP for alltargets_200_500
 icp <- get_ROC_curves('alltargets_200_500_sdw7_sdh5')
@@ -555,4 +570,10 @@ Control obs: 10000.
 Shift noise sd: 7.
 Hiddens sd: 5"
     )
+
+
+AUC_alltargets_wide %>%
+    filter(n_obs_each == 10,
+           num_interv == 500,
+           method == 'randomguess')
 
