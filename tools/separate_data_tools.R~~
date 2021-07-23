@@ -4,10 +4,20 @@ suppressWarnings(suppressMessages(library(tidyr)))
 # suppressWarnings(suppressMessages(library(igraph)))
 suppressWarnings(suppressMessages(library(Matrix)))
 
-## Read default directory to save files in
-default_dir = scan('run_scripts/data_dir.txt',
-                   what = 'char',
-                   quiet = TRUE)
+# Read directory to save files in
+default_dir <- scan('run_scripts/data_dir.txt', what = 'char')
+
+### This file contains alternate versions of the simulation functions, where the
+### data comes from two actual separate experiments, rather than just one
+### experiments with permutation to emulate a second experiment.
+
+### The functions have the same names, and the results produced will be saved in
+### files named exactly the same, to save a lot of extra work in development of
+### this code. To distinguish, you should save them in a specific subdirectory
+### of the data directory. One has to run the processing functions (to
+### calculate AUC) separately in this subdirectory, and load the results in a
+### second tibble, since it would otherwise be indistinguishable from regular
+### alltargets from the permutation setup.
 
 # Simulates data from the alltargets setup.
 # INPUT:
@@ -24,8 +34,8 @@ sim_alltargets <- function(DAG_data,
                           num_interv,
                           shift_noise_sd,
                           sd_hiddens) {
-### The i'th element of n_obs contains the number of observations
-# of the i'th setting.
+  ## The i'th element of n_obs contains the number of observations
+  ## of the i'th setting.
   n_obs <- rep(n_obs_each, num_interv)
   num_var <- nrow(DAG_data$B)
  
@@ -58,27 +68,16 @@ sim_alltargets <- function(DAG_data,
       as_tibble
   }
   
-  # list where i'th entry is simulated data for i'th intervention
+  ## list where i'th entry is simulated data for i'th intervention
   sim_list <- lapply(1:num_interv, interv_sim)
+  ## Simulate from the separate tilde-experiment
+  sim_list_tilde <- lapply(1:num_interv, interv_sim)
 
-  # Permutes the rows of the i'th intervention experiment
-  if (n_obs_each == 2) {
-    # If there are exactly two observations in each setting
-    # then those two observations are flipped.
-    permute_experiment <- function(i) sim_list[[i]][c(2,1), ]
-  } else {
-    # Otherwise the rows are randomly permuted.
-    # Saves a permutation for each intervention experiment
-    permutation_list <- lapply(n_obs, function(n) sample(n))
-    permute_experiment <- function(i) sim_list[[i]][permutation_list[[i]], ]
-  }
-  # Applies all permutations to obtain tilde data sets
-  sim_list_tilde <- lapply(1:num_interv, permute_experiment)
-  # Collects all rows in one tibble
+  ## Collects all rows in one tibble
   sim_tib <- do.call(rbind, sim_list)
   sim_tib_tilde <- do.call(rbind, sim_list_tilde)
   
-  # Returns relevant data
+  ## Returns relevant data
   DAG_data$dat <- list()
   DAG_data$dat$X <- as.matrix(sim_tib[, DAG_data$x])
   DAG_data$dat$Y <- as.matrix(sim_tib[, DAG_data$y])
@@ -95,7 +94,7 @@ sim_alltargets <- function(DAG_data,
 
 # Simulates alltargets data sets for each DAG in DAG_list and saves in files.
 # The datasets are saved in directories
-# data/alltargets_[n_obs_each]_[num_interv]_sdw[shift_noise_sd]_sdh[sd_hiddens]
+# data/separate/alltargets_[n_obs_each]_[num_interv]_sdw[shift_noise_sd]_sdh[sd_hiddens]
 # containing multiple files 1.rds, ..., n.rds, where n is determined such that
 # each files has a maximum size of max_MB_per_file MB (to avoid overloading
 # memory).
@@ -299,45 +298,27 @@ sim_singletargets <- function(DAG_data,
 
   # Simulates control data set. Only difference from the above is that
   # no mean shifts are added.
-  N <- matrix(rnorm(n_obs_control * num_var),
-                nrow = num_var,
-                ncol = n_obs_control)
-  N[DAG_data$h, ] <- rnorm(n_obs_control * length(DAG_data$h), sd = sd_hiddens)
-  X <- solve(diag(num_var) - DAG_data$B) %*% N
-  rownames(X) <- paste("X", 1:num_var, sep = "")
-  X %>%
-    t %>%
-    as.matrix %>%
-    as_tibble ->
-    control_tib
+  get_control_sim <- function() {  
+      N <- matrix(rnorm(n_obs_control * num_var),
+                  nrow = num_var,
+                  ncol = n_obs_control)
+      N[DAG_data$h, ] <- rnorm(n_obs_control * length(DAG_data$h), sd = sd_hiddens)
+      X <- solve(diag(num_var) - DAG_data$B) %*% N
+      rownames(X) <- paste("X", 1:num_var, sep = "")
+      X %>%
+          t %>%
+          as.matrix %>%
+          as_tibble
+  }
 
-  # list where i'th entry is simulated data for i'th intervention
+  ## Simulates from the two separate sets of experiments
+    
+  contril_tib <- get_control_sim()
+  contril_tib_tilde <- get_control_sim()  
+    
   sim_list <- lapply(1:num_interventional_settings, interv_sim)
-  # Functions to permute rows from i'th environment
-  if (n_obs_each == 2) {
-    # If there are exactly two observations in each setting
-    # then those two observations are flipped.
-    permute_experiment <- function(i) sim_list[[i]][c(2,1), ]
-  } else {
-    # Otherwise the rows are randomly permuted.
-    # Saves a permutation for each intervention experiment
-    permutation_list <- lapply(n_obs, function(n) sample(n))
-    permute_experiment <- function(i) sim_list[[i]][permutation_list[[i]], ]
-  }
-
-  # Permutes control observations
-  if (n_obs_control == 2) {
-    control_tib_tilde <- control_tib[c(2,1), ]
-  } else {
-    control_tib_tilde <- control_tib[sample(n_obs_control), ]
-  }
-
-  # Applies all permutations to obtain tilde data sets
-  sim_list_tilde <- lapply(1:num_interventional_settings, permute_experiment)
-  # Collects all rows in one tibble
-  sim_tib <- rbind(do.call(rbind, sim_list), control_tib)
-  sim_tib_tilde <- rbind(do.call(rbind, sim_list_tilde), control_tib_tilde)
-
+  sim_list_tilde <- lapply(1:num_interventional_settings, interv_sim)
+  
   # Returns relevant data
   DAG_data$dat <- list()
   DAG_data$dat$X <- as.matrix(sim_tib[, DAG_data$x])

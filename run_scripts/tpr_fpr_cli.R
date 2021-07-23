@@ -1,3 +1,6 @@
+data_dir <- scan('run_scripts/data_dir.txt',
+                 what = 'char',
+                 quiet = TRUE)
 save_tpr_fpr_cli_args <- function(order_func, method_name,
                                     n_DAGs_to_process = Inf)
 {
@@ -5,12 +8,13 @@ save_tpr_fpr_cli_args <- function(order_func, method_name,
     sim_type <- args[1]
     params <- as.numeric(args[2:length(args)])
     if (sim_type == "all") {
-        dir <- sprintf("data/alltargets_%d_%d_sdw%d_sdh%d",
-                        params[1], params[2], params[3], params[4])
+        dir <- sprintf("%s/alltargets_%d_%d_sdw%d_sdh%d",
+                        data_dir, params[1], params[2], params[3], params[4])
     } else if (sim_type == "single") {
-       dir <- sprintf("data/singletargets_%d_%d_%d_%d_sdw%d_sdh%d",
-                    params[1], params[2], params[3],
-                    params[4], params[5], params[6])
+        dir <- sprintf("%s/singletargets_%d_%d_%d_%d_sdw%d_sdh%d",
+                       data_dir,
+                       params[1], params[2], params[3],
+                       params[4], params[5], params[6])
     }
     if (dir.exists(dir) & !file.exists(paste(dir, "/tpr_fpr_", method_name, ".rds", sep = ""))) {
         source("tools/AUC_tools.R")

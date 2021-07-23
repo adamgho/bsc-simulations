@@ -4,6 +4,12 @@ suppressWarnings(suppressMessages(library(tidyr)))
 
 source("tools/methods.R")
 
+## The default directory to use is contained in the file
+## run_scripts/data_dir.txt
+default_dir <- scan('run_scripts/data_dir.txt',
+                    what = 'char',
+                    quiet = TRUE)
+
 # Vector of how many x's to select when getting ROC points
 n_selects <- 0:30
 n_n_selects <- length(n_selects)
@@ -72,7 +78,7 @@ get_tpr_fpr <- function(anc_selected, anc_y, x) {
 #   dir: Directory containing sim-directories
 # Output:
 #   Vector of all names of simulation directories in dir.
-get_sim_dirs <- function(sim_type, dir = "data") {
+get_sim_dirs <- function(sim_type, dir = default_dir) {
     if (sim_type == "alltargets") {
         list.files(dir,
             pattern = str_c("^alltargets_[0-9]+_[0-9]+_sdw[0-9]+_sdh[0-9]+$")
@@ -246,12 +252,12 @@ one_minus <- function(pval_func) {
     function(dat) 1 - pval_func(dat)
 }
 
-# Runs save_tpr_fpr on all data-directoris in dir that don't already
+# Runs save_tpr_fpr on all data-directories in dir that don't already
 # have a file named tpr_fpr_"method_name".rds
 add_missing_tpr_fpr <- function(order_func, method_name,
                                 sim_type = "alltargets",
                                 n_DAGs_to_process = Inf,
-                                dir = "data") {
+                                dir = default_dir) {
     sim_dirs <- get_sim_dirs(sim_type, dir)
 
     for (sim_dir in sim_dirs) {
@@ -317,7 +323,7 @@ save_AUC <- function(dir) {
 }
 
 ## Runs save_AUC on all data directories in dir.
-add_missing_AUC <- function(sim_type = "alltargets", dir = "data/") {
+add_missing_AUC <- function(sim_type = "alltargets", dir = default_dir) {
     sim_dirs <- get_sim_dirs(sim_type, dir)
 
     for (sim_dir in sim_dirs) {
@@ -340,7 +346,7 @@ get_AUC <- function(tpr, fpr) {
 }
 
 # Wrapper that calls the relevant version of collect_AUC for the sim_type.
-collect_AUC <- function(sim_type = "alltargets", dir = "data/") {
+collect_AUC <- function(sim_type = "alltargets", dir = default_dir) {
     do.call(str_c("collect_AUC_", sim_type), list(dir = dir))
 }
 
@@ -348,7 +354,7 @@ collect_AUC <- function(sim_type = "alltargets", dir = "data/") {
 # dir in a single tibble and saves it in dir/AUC_alltargets.rds.
 # The parameters for the different alltargets setups are saved in the tibble
 # as well.
-collect_AUC_alltargets <- function(dir = "data/") {
+collect_AUC_alltargets <- function(dir = default_dir) {
     cat(sprintf("\n### Collecting alltargets AUC from %s ###\n", dir))
 
     sim_dirs <- get_sim_dirs("alltargets", dir)
@@ -393,7 +399,7 @@ collect_AUC_alltargets <- function(dir = "data/") {
 # Collects all AUC from singletargets directories in dir in
 # a single tibble and saves it in dir/AUC_singletargets.rds.
 # Similar to collect_AUC_alltargets (but for singletargets instead).
-collect_AUC_singletargets <- function(dir = "data/") {
+collect_AUC_singletargets <- function(dir = default_dir) {
     cat(sprintf("\n### Collecting AUC from %s ###\n", dir))
 
     sim_dirs <- get_sim_dirs("singletargets", dir)

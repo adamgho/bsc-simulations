@@ -27,10 +27,12 @@ wide_AUC <- function(AUC_tib) {
 }
 
 
-AUC_alltargets <- tibble(readRDS("data/AUC_alltargets.rds")) 
+### Permuted experiments
+
+AUC_alltargets <- tibble(readRDS("data/small/AUC_alltargets.rds")) 
 AUC_alltargets_wide <- wide_AUC(AUC_alltargets)
 
-AUC_singletargets <- tibble(readRDS("data/AUC_singletargets.rds"))
+AUC_singletargets <- tibble(readRDS("data/small/AUC_singletargets.rds"))
 AUC_singletargets_wide <- wide_AUC(AUC_singletargets)
 
 ### Singletargets
@@ -100,7 +102,7 @@ ggsave('figures/singletargets_10_x_y_10x_sdw7_sdh5.pdf',
 
 ### alltargets
 
-                                        # alltargets_y_x_sdw7_sdh5
+## alltargets_y_x_sdw7_sdh5
 AUC_alltargets_wide %>% 
     filter(shift_noise_sd == 7,
             sd_hiddens == 5,
@@ -127,7 +129,7 @@ ggsave('figures/alltargets_y_x_sdw7_sdh5.pdf',
 
 
 
-                                        # alltargets_x_500_sdw7_sdh5
+## alltargets_x_500_sdw7_sdh5
 AUC_alltargets_wide %>% 
     filter(shift_noise_sd == 7,
             sd_hiddens == 5,
@@ -306,6 +308,33 @@ ggsave('figures/alltargets_2_2500_sdw7_sdhx.pdf',
        units = 'cm')
 
 
+### Separate experiments
+
+AUC_alltargets_sep <- tibble(readRDS("data/separate/AUC_alltargets.rds")) 
+AUC_alltargets_sep_wide <- wide_AUC(AUC_alltargets_sep)
+
+AUC_singletargets_sep <- tibble(readRDS("data/separate/AUC_singletargets.rds"))
+AUC_singletargets_sep_wide <- wide_AUC(AUC_singletargets_sep)
+
+## alltargets_10_x_sdw7_sdh5
+AUC_alltargets_sep_wide %>% 
+    filter(shift_noise_sd == 7,
+            sd_hiddens == 5,
+            n_obs_each %in% c(2, 10)) %>% 
+    ggplot(aes(x = num_interv, y = AUC_mean, col = method)) +
+    geom_line() +
+    geom_point() +
+    facet_grid(n_obs_each ~ type) +
+       labs(
+        x = "Number of environments",
+        y = "Average AUC",
+        title =
+"
+alltargets.
+# obs per environment: 10.
+Shift noise sd: 7.
+Hiddens sd: 5"
+)
 
 # ROC curve for an example
 

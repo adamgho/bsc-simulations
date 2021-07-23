@@ -14,10 +14,9 @@ SLEEPTIME=.1
 # used to calculate max number of processes that can run at a time.
 MAXMBPERFILE=500
 
-
-
 echo STARTING > "run_scripts/.output/run.txt"
 
+# Help messages and processing of arguments
 if [ $# = 0 ]; then
 	echo "You need to pass an argument. Run with -h argument for help."
 	exit 1
