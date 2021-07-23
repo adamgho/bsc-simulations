@@ -1,4 +1,5 @@
-suppressWarnings(suppressMessages(library(InvariantCausalPrediction)))
+## Uncomment the following line if you use ICP
+## suppressWarnings(suppressMessages(library(InvariantCausalPrediction)))
 suppressWarnings(suppressMessages(library(MASS)))
 suppressWarnings(suppressMessages(library(Matrix)))
 # suppressWarnings(suppressMessages(library(igraph)))
