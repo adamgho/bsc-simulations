@@ -4,7 +4,7 @@
 params <- as.numeric(commandArgs(trailingOnly = TRUE))
 
 ## Indices of DAGs to simulate from
-DAGs_to_sim <- 1:10
+DAGs_to_sim <- 1:1000
 DAGs_filename <- "data/DAGs1000_nx30_nh30_probconnect04.rds" 
 ## DAGs_filename <- "data/exampleDAG1.rds"
 
