@@ -20,6 +20,8 @@ theme_set(
 imw <- 14
 imh <- 20
 
+
+
 wide_AUC <- function(AUC_tib) {
     pivot_wider(AUC_tib, names_from = measure,
                 names_prefix = "AUC_",
@@ -29,11 +31,21 @@ wide_AUC <- function(AUC_tib) {
 
 ### Permuted experiments
 
+### Small (need to change)
+
 AUC_alltargets <- tibble(readRDS("data/small/AUC_alltargets.rds")) 
 AUC_alltargets_wide <- wide_AUC(AUC_alltargets)
 
 AUC_singletargets <- tibble(readRDS("data/small/AUC_singletargets.rds"))
 AUC_singletargets_wide <- wide_AUC(AUC_singletargets)
+
+### stor1
+
+AUC_alltargets_stor1 <- tibble(readRDS('data/stor1/AUC_alltargets.rds'))
+AUC_alltargets_stor1_wide <- wide_AUC(AUC_alltargets_stor1)
+
+AUC_singletargets_stor1 <- tibble(readRDS('data/stor1/AUC_singletargets.rds'))
+AUC_singletargets_stor1_wide <- wide_AUC(AUC_singletargets_stor1)
 
 ### Singletargets
 
@@ -102,8 +114,27 @@ ggsave('figures/singletargets_10_x_y_10x_sdw7_sdh5.pdf',
 
 ### alltargets
 
+AUC_alltargets_stor1_wide %>% 
+    filter(shift_noise_sd == 7,
+            sd_hiddens == 5,
+            n_obs_each %in% c(2, 10)) %>% 
+    ggplot(aes(x = num_interv, y = AUC_mean, col = method)) +
+    geom_line() +
+    geom_point() +
+    facet_grid(n_obs_each ~ type) +
+       labs(
+        x = "Number of environments",
+        y = "Average AUC",
+        title =
+"
+alltargets.
+# obs per environment: 2 resp. 10.
+Shift noise sd: 7.
+Hiddens sd: 5"
+)
+
 ## alltargets_y_x_sdw7_sdh5
-AUC_alltargets_wide %>% 
+AUC_alltargets_stor1_wide %>% 
     filter(shift_noise_sd == 7,
             sd_hiddens == 5,
             n_obs_each %in% c(2, 10)) %>% 
