@@ -51,7 +51,7 @@ AUC_singletargets_stor1_wide <- wide_AUC(AUC_singletargets_stor1)
 
 # singletargets_2_X_Y_2X_sdw7_sdh5 where Y in {15, 30}
 
-AUC_singletargets_wide %>% 
+AUC_singletargets_stor1_wide %>% 
     filter(num_x_interv %in% c(15, 30),
            shift_noise_sd == 7,
             sd_hiddens == 5,

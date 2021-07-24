@@ -128,7 +128,7 @@ sim_alltargets_datasets <- function(DAG_list, n_obs_each, num_interv,
     # Name of directory to contain simulated data
     setting_name <- sprintf("alltargets_%d_%d_sdw%d_sdh%d",
                         n_obs_each, num_interv, shift_noise_sd, sd_hiddens)
-    dir_complete <- str_c(dir, setting_name)
+    dir_complete <- str_c(dir, '/', setting_name)
     # The directory will be named with suffix _incomplete until this function
     # has finished running (useful to see if it was interrupted or is not
     # yet finished).
@@ -392,7 +392,7 @@ sim_singletargets_datasets <- function(DAG_list,
                         shift_noise_sd,
                         sd_hiddens)
 
-    dir_complete <- str_c(dir, setting_name)
+    dir_complete <- str_c(dir, '/', setting_name)
     dir <- str_c(dir_complete, "_incomplete")
 
     file_index_start <- 1
