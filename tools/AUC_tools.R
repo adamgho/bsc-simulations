@@ -107,7 +107,7 @@ get_sim_dirs <- function(sim_type, dir = default_dir) {
 save_tpr_fpr <- function(dir, order_func, method_name,
                         n_DAGs_to_process = Inf) {
     # If there are only 2 observations in some environment, then ICP can't run.
-    if (method_name == "ICP" &
+    if (method_name %in% c("ICP", 'PICP') &
         # First checks whether n_obs_each == 2 (for either setup)
         (( str_extract(
             dir,
@@ -125,6 +125,10 @@ save_tpr_fpr <- function(dir, order_func, method_name,
                    cat(sprintf("# Skipping %s\n(ICP needs min. three obs. per environment)\n\n",
                         dir))
             return(1)
+    } else if (method_name == 'mean-shift' &
+               str_extract(dir, "[a-z]+(?=targets)") == 'all') {
+        cat('mean-shift skips alltargets')
+        return(1)
     }
 
     res_tib <- tibble()
@@ -184,7 +188,7 @@ save_tpr_fpr <- function(dir, order_func, method_name,
                 # i'th smallest value in order_vals
                 order(
                     # rank with random tie breaking to avoid ties.
-                    # If just using order_vals (without rank first)
+                    # If just using abs(order_vals) (without rank first)
                     # order wouldn't break ties randomly.
                     rank(abs(order_vals), ties.method = "random")
                 )
@@ -390,11 +394,11 @@ collect_AUC_alltargets <- function(dir = default_dir) {
                         rbind(complete_tib) ->
                         complete_tib
 
-            cat("Added\n")
+            cat(" ~ Added\n")
         } else {
             # If sim_dir doesn't contain a file named AUC.rds
             # it is skipped
-            cat("No AUC.rds\n")
+            cat(" ~ No AUC.rds\n")
         }
     }
     # Saves results
@@ -436,9 +440,9 @@ collect_AUC_singletargets <- function(dir = default_dir) {
                         rbind(complete_tib) ->
                         complete_tib
 
-            cat("Added\n")
+            cat(" ~ Added\n")
         } else {
-            cat("No AUC.rds\n")
+            cat(" ~ No AUC.rds\n")
         }
     }
     

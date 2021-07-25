@@ -1,5 +1,5 @@
 ## Uncomment the following line if you use ICP
-## suppressWarnings(suppressMessages(library(InvariantCausalPrediction)))
+suppressWarnings(suppressMessages(library(InvariantCausalPrediction)))
 suppressWarnings(suppressMessages(library(MASS)))
 suppressWarnings(suppressMessages(library(Matrix)))
 # suppressWarnings(suppressMessages(library(igraph)))
@@ -27,6 +27,13 @@ p_values_ICP <- function(dat) {
       showCompletion = F)$pvalues
 }
 
+# p-values from Permuted ICP
+p_values_PICP <- function(dat) {
+  ICP(dat$X, as.vector(dat$Y_tilde), dat$setting,
+      showAcceptedSets = F,
+      showCompletion = F)$pvalues
+}
+
 # p-value from OLS
 p_values_OLS <- function(dat) {
   summary(lm(dat$Y ~ as.matrix(dat$X) - 1))$coefficient[,4]
@@ -46,6 +53,36 @@ p_values_DPOLS <- function(dat) {
   2 * pt(abs(t), df = nrow(dat$X) - ncol(dat$X), lower.tail = F)
 }
 
+## baseline singletargets based
+get_meanshifts <- function(dat) {
+    ## Indices of control observations
+    control_indices <- dat$interv == 0
+    ## List of X's intervened on
+    intervs <- unique(dat$interv)
+    ## Indices of X's
+    x <- as.numeric(substr(colnames(dat$X), 2, 3))
+    ## Vector for storing results
+    nx <- length(x)
+    meanabsmean <- rep(0, nx)    
+    ## Loop through all X
+    for (i in 1:nx) {
+        ## If x is never intervened on, just let absmean be 0 (since we have no info)
+        ## If x is intervened on calculate absmean as follows
+        if (x[i] %in% intervs) {
+            ## Settings where x is intervened on
+            settings <- unique(dat$setting[dat$interv == x[i]])
+            absmean_sum <- 0
+            ## Calculate p-value in each setting with intervention on x
+            for (setting in settings) {
+                setting_indices <- dat$setting == setting
+                absmean_sum <- absmean_sum + abs(mean(dat$Y[setting_indices]))
+            }
+            ## Save mean of absmeans
+            meanabsmean[i] <- mean(absmean_sum)
+        }
+    }
+    return(meanabsmean)
+}
 
 ### Checking significance
 ### returns the vertex numbers of the X's corresponding to beta entries

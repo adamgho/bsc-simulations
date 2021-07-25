@@ -4,8 +4,9 @@
 params <- as.numeric(commandArgs(trailingOnly = TRUE))
 
 # Indices of the DAGs to simulate from
-DAGs_to_sim <- 1:10
-DAGs_filename <- "data/DAGs1000_nx30_nh30_probconnect04.rds"
+DAGs_to_sim <- 1:100
+## DAGs_filename <- "data/DAGs1000_nx30_nh30_probconnect04.rds"
+DAGs_filename <- "data/DAGs1000_nx5_nh5_probconnect04.rds"
 
 ## directory to save files in
 dir <- scan('run_scripts/data_dir.txt',

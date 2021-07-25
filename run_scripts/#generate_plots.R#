@@ -42,7 +42,7 @@ ggplot(AUC_alltargets_wide, aes(x = num_interv, y = AUC_mean, col = method)) +
     geom_line() +
     facet_wrap(~ type)
 
-ggplot(AUC_singletargets_wide, aes(x = num_interv, y = AUC_mean, col = method)) +
+ggplot(AUC_singletargets_wide, aes(x = num_interv_each, y = AUC_mean, col = method)) +
     geom_point() +
     geom_line() +
     facet_wrap(~ type)
