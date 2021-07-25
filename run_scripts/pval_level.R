@@ -1,6 +1,6 @@
 source('tools/methods.R')
 
-DAG_list <- readRDS('/docs/Documents/projects/bachelorprojekt/Rcode/data/nx5_local/alltargets_10_500_sdw7_sdh5/1.rds')
+DAG_list <- readRDS('/docs/Documents/projects/bachelorprojekt/Rcode/data/nx5_local/alltargets_10_5_sdw7_sdh5/1.rds')
 n_DAGs <- length(DAG_list)
 ## OLS, POLS, DPOLS
 false_pos_pa_count <- rep(0, 3)
