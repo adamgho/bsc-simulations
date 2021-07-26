@@ -2,7 +2,7 @@
 
 ## Everything except for the functions `randomDAG`, `computeCausOrder` and `randomB`
 
-Copyright (c) 2021    Adam Gorm Hoffmann [nrm545@alumni.ku.dk] 
+Copyright (c) 2021    Adam Gorm Hoffmann [public@adamgorm.dk] 
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

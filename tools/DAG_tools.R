@@ -107,7 +107,7 @@ computeCausOrder <- function(G)
 }
 
 randomDAG <- function(p,probConnect,causalOrder = sample(p,p,replace=FALSE))
-  # Adapted slightly by Adam Gorm Hoffmann [nrm545@alumni.ku.dk] to also return causalOrder.
+  # Adapted slightly to also return causalOrder.
   # Original unadapted version written by Jonas Peters:
   # Copyright (c) 2010 - 2012  Jonas Peters  [peters@stat.math.ethz.ch]
   #    
