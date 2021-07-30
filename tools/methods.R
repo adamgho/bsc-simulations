@@ -27,7 +27,7 @@ p_values_ICP <- function(dat) {
       showCompletion = F)$pvalues
 }
 
-# p-values from Permuted ICP
+## p-values from PICP (Permuted ICP)
 p_values_PICP <- function(dat) {
   ICP(dat$X, as.vector(dat$Y_tilde), dat$setting,
       showAcceptedSets = F,
@@ -50,10 +50,11 @@ p_values_DPOLS <- function(dat) {
   cp <- solve(crossprod(dat$X, dat$X_tilde))
   std_errors <- sigma * sqrt(diag(cp %*% crossprod(dat$X) %*% t(cp)))
   t <- as.vector(beta_DPOLS(dat) / std_errors)
+  ## df is the number of X's minus the number of observations
   2 * pt(abs(t), df = nrow(dat$X) - ncol(dat$X), lower.tail = F)
 }
 
-## baseline singletargets based
+## mean-shift baseline method
 get_meanshifts <- function(dat) {
     ## Indices of control observations
     control_indices <- dat$interv == 0

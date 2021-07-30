@@ -2,50 +2,341 @@
 
 library(tidyverse)
 theme_set(
-  theme_bw(base_size=12, base_family="Palatino") %+replace%
-  theme(
-    #panel.grid = element_blank(),
-    axis.ticks = element_line(size = 0.3),
-    #panel.border = element_blank(),
-    axis.line = element_line(size = 0.3),
-    panel.background = element_rect(fill = "transparent",colour = NA),
-    plot.background = element_rect(fill = "transparent",colour = NA),
-    legend.background = element_rect(fill="transparent", colour=NA),
-    legend.key        = element_rect(fill="transparent", colour=NA),
-    strip.background = element_rect(fill = "transparent",colour = NA),
-    legend.position = 'bottom'
-  )
+    theme_bw(base_size=12, base_family="") %+replace%
+    theme(
+        ##panel.grid = element_blank(),
+        axis.ticks = element_line(size = 0.3),
+        ##panel.border = element_blank(),
+        axis.line = element_line(size = 0.3),
+        panel.background = element_rect(fill = "transparent",colour = NA),
+        plot.background = element_rect(fill = "transparent",colour = NA),
+        legend.background = element_rect(fill="transparent", colour=NA),
+        legend.key        = element_rect(fill="transparent", colour=NA),
+        strip.background = element_rect(fill = "transparent",colour = NA),
+        legend.position = 'bottom',
+        plot.title = element_text(hjust = 0.5)
+    )
 )
 
-imw <- 14
-imh <- 20
+library(tikzDevice)
 
+## Saves plot in pdf in figures directory
+save_plot <- function(setting_name) {
+    ## Width of saved image in cm
+    imw <- 14
+    ## Height of saved image in cm
+    imh <- 20
+    
+    ggsave(str_c('figures/', setting_name, 'pdf'),
+           width = imw,
+           height = imh,
+           units = 'cm')
+}
 
+imw <- 6
+imh <- 7
 
+## Converts AUC_tib to a wider format with a column for each of AUC_mean, AUC_median,
+## AUC_quartile3, and AUC_quartile4.
 wide_AUC <- function(AUC_tib) {
     pivot_wider(AUC_tib, names_from = measure,
                 names_prefix = "AUC_",
                 values_from = AUC)  
 }
 
+## Reads tibble in wide format from rds file.
+read_wide <- function(file_name) {
+    wide_AUC(tibble(readRDS(file_name)))
+}
 
-### nx5 nh5
+####### Permuting (non-separate)
 
-AUC_alltargets <- tibble(readRDS("data/nx5_local/AUC_alltargets.rds")) 
+## alltargets AUC
+stor1_all <- read_wide('local_results/stor1/AUC_alltargets.rds')
+stor2_all <- read_wide('local_results/stor2/AUC_alltargets.rds')
+stor4_all <- tibble(readRDS('local_results/stor2/AUC_alltargets.rds'))
+
+## TODO: include stor4_all
+AUC_all <- filter(rbind(stor1_all, stor2_all), method != 'randomguess')
+
+## singletargets AUC
+stor1_single <- read_wide('local_results/stor1/AUC_singletargets.rds')
+stor2_single <- read_wide('local_results/stor2/AUC_singletargets.rds')
+stor4_single <- tibble(readRDS('local_results/stor2/AUC_singletargets.rds'))
+
+## TODO: include stor4_single
+AUC_single <- rbind(stor1_single, stor2_single)
+
+##### 30 X and 30 H
+
+tikz(file = '~/thesis/figures/alltargets_vary_num_interv.tex', width=imw, height=imh)
+AUC_all %>% 
+    filter(shift_noise_sd == 7,
+           sd_hiddens == 5,
+           n_obs_each %in% c(2, 10)) %>% 
+    ggplot(aes(x = num_interv, y = AUC_mean, col = method)) +
+    geom_line() +
+    geom_point(size = 0.8) +
+    facet_grid(n_obs_each ~ type) +
+    labs(
+        x = "Number of environments",
+        y = "Average AUC",
+        title =
+            "alltargets -- varying number environments"
+    )
+endoffile <- dev.off()
+
+tikz(file = '~/thesis/figures/alltargets_x_500_7_5.tex', width=imw, height=imh)
+AUC_all %>% 
+    filter(shift_noise_sd == 7,
+           sd_hiddens == 5,
+           num_interv == 500) %>% 
+    ggplot(aes(x = n_obs_each, y = AUC_mean, col = method)) +
+    geom_line() +
+    geom_point() +
+    facet_wrap( ~ type, nrow = 2) +
+    labs(
+        x = "Number of observations per environment",
+        y = "Average AUC",
+        title =
+            "alltargets -- varying number of observations per environment"
+    )
+endoffile <- dev.off()
+
+tikz(file = '~/thesis/figures/alltargets_5000obs.tex', width=imw, height=imh)
+AUC_all %>% 
+    filter(shift_noise_sd == 7,
+           sd_hiddens == 5,
+           num_interv*n_obs_each == 5000) %>% 
+    ggplot(aes(x = log(num_interv / n_obs_each), y = AUC_mean, col = method)) +
+    geom_line() +
+    geom_point() +
+    facet_wrap( ~ type, nrow = 2) +
+       labs(
+           x = "$\\log \\frac{\\# \\mathrm{environments}}{\\# \\mathrm{observations\\ per\\ environment}}$",
+           y = "Average AUC",
+           title =
+               "alltargets -- few env. with many obs. vs. many env. with few obs."
+       )
+endoffile <- dev.off()
+
+tikz(file = '~/thesis/figures/alltargets_vary_sdw.tex', width=imw, height=imh)
+AUC_all %>% 
+    filter(sd_hiddens == 5,
+           (num_interv == 500 & n_obs_each == 10) |
+           (num_interv == 2500 & n_obs_each == n_obs_each)) %>% 
+    ggplot(aes(x = shift_noise_sd, y = AUC_mean, col = method)) +
+    geom_line() +
+    geom_point() +
+    facet_grid(n_obs_each ~ type) +
+       labs(
+           x = "Standard deviation of mean shifts",
+           y = "Average AUC",
+           title =
+               "alltargets -- varying standard deviation of mean shifts $W$"
+       )
+endoffile <- dev.off()
+
+tikz(file = '~/thesis/figures/alltargets_vary_sdh.tex', width=imw, height=imh)
+AUC_all %>% 
+    filter(shift_noise_sd == 7,
+           (num_interv == 500 & n_obs_each == 10) |
+           (num_interv == 2500 & n_obs_each == 2)) %>% 
+    ggplot(aes(x = sd_hiddens, y = AUC_mean, col = method)) +
+    geom_line() +
+    geom_point() +
+    facet_grid(n_obs_each ~ type) +
+       labs(
+           x = "Standard deviation of hidden variables",
+           y = "Average AUC",
+           title =
+               "alltargets -- varying standard deviation of hidden variables"
+       )
+endoffile <- dev.off()
+
+
+
+### End of implemented
+
+stopifnot('Done executing implemented plots' = FALSE)
+
+##### 5 X and 5 H
+
+AUC_alltargets <- tibble(readRDS("local_results/nx5/AUC_alltargets.rds")) 
 AUC_alltargets_wide <- wide_AUC(AUC_alltargets)
 
-AUC_singletargets <- tibble(readRDS("data/nx5_local/AUC_singletargets.rds"))
+AUC_singletargets <- tibble(readRDS("local_results/nx5/AUC_singletargets.rds"))
 AUC_singletargets_wide <- wide_AUC(AUC_singletargets)
 
-ggplot(AUC_alltargets_wide, aes(x = num_interv, y = AUC_mean, col = method)) +
+## alltargets_10_x_sdw7_sdh5
+
+AUC_alltargets_wide %>%
+    filter(n_obs_each == 10,
+           shift_noise_sd == 7,
+           sd_hiddens == 5) %>%
+    ggplot(aes(x = num_interv,
+               y = AUC_mean,
+               col = method)) +
     geom_point() +
     geom_line() +
     facet_wrap(~ type)
 
-ggplot(AUC_singletargets_wide, aes(x = num_interv, y = AUC_mean, col = method)) +
+## same as above, but only small values of num_interv
+
+
+AUC_alltargets_wide %>%
+    filter(n_obs_each == 10,
+           num_interv <= 2500,
+           shift_noise_sd == 7,
+           sd_hiddens == 5) %>%
+    ggplot(aes(x = num_interv,
+               y = AUC_mean,
+               col = method)) +
     geom_point() +
     geom_line() +
     facet_wrap(~ type)
+
+## alltargets_2_x_sdw7_sh5
+
+
+AUC_alltargets_wide %>%
+    filter(n_obs_each == 2,
+           shift_noise_sd == 7,
+           sd_hiddens == 5) %>%
+    ggplot(aes(x = num_interv,
+               y = AUC_mean,
+               col = method)) +
+    geom_point() +
+    geom_line() +
+    facet_wrap(~ type)
+
+## singletargets_10_x_5_10x_sdw7_sdh5
+
+AUC_singletargets_wide %>%
+    filter(n_obs_each == 10,
+           num_x_interv == 5,
+           n_obs_control == 10*num_interv_each,
+           shift_noise_sd == 7,
+           sd_hiddens == 5) %>%
+    ggplot(aes(x = num_interv_each,
+               y = AUC_mean,
+               col = method)) +
+    geom_point() +
+    geom_line() +
+    facet_wrap(~ type)
+
+## singletargets_2_x_sdw7_sh5
+
+AUC_singletargets_wide %>%
+    filter(n_obs_each == 2,
+           num_x_interv == 5,
+           n_obs_control == 2*num_interv_each,
+           shift_noise_sd == 7,
+           sd_hiddens == 5) %>%
+    ggplot(aes(x = num_interv_each,
+               y = AUC_mean,
+               col = method)) +
+    geom_point() +
+    geom_line() +
+    facet_wrap(~ type)
+
+###### Separate experiments
+
+##### 30 X and 30 H
+
+## alltargets AUC
+stor3_all <- tibble(readRDS('local_results/stor3/AUC_alltargets.rds'))
+## stor5_all <- tibble(readRDS('local_results/stor5/AUC_alltargets.rds'))
+stor6_all <- tibble(readRDS('local_results/stor6/AUC_alltargets.rds'))
+
+## singletargets AUC
+stor3_single <- tibble(readRDS('local_results/stor3/AUC_singletargets.rds'))
+## stor5_single <- tibble(readRDS('local_results/stor5/AUC_singletargets.rds'))
+stor6_single <- tibble(readRDS('local_results/stor6/AUC_singletargets.rds'))
+
+##### 5 X and 5 H
+
+## TODO: rename these (copy from permuted version)
+AUC_alltargets <- tibble(readRDS("local_results/nx5/AUC_alltargets.rds")) 
+AUC_alltargets_wide <- wide_AUC(AUC_alltargets)
+
+AUC_singletargets <- tibble(readRDS("local_results/nx5/AUC_singletargets.rds"))
+AUC_singletargets_wide <- wide_AUC(AUC_singletargets)
+
+## alltargets_10_x_sdw7_sdh5
+
+AUC_alltargets_wide %>%
+    filter(n_obs_each == 10,
+           shift_noise_sd == 7,
+           sd_hiddens == 5) %>%
+    ggplot(aes(x = num_interv,
+               y = AUC_mean,
+               col = method)) +
+    geom_point() +
+    geom_line() +
+    facet_wrap(~ type)
+
+## same as above, but only small values of num_interv
+
+
+AUC_alltargets_wide %>%
+    filter(n_obs_each == 10,
+           num_interv <= 2500,
+           shift_noise_sd == 7,
+           sd_hiddens == 5) %>%
+    ggplot(aes(x = num_interv,
+               y = AUC_mean,
+               col = method)) +
+    geom_point() +
+    geom_line() +
+    facet_wrap(~ type)
+
+## alltargets_2_x_sdw7_sh5
+
+
+AUC_alltargets_wide %>%
+    filter(n_obs_each == 2,
+           shift_noise_sd == 7,
+           sd_hiddens == 5) %>%
+    ggplot(aes(x = num_interv,
+               y = AUC_mean,
+               col = method)) +
+    geom_point() +
+    geom_line() +
+    facet_wrap(~ type)
+
+## singletargets_10_x_5_10x_sdw7_sdh5
+
+AUC_singletargets_wide %>%
+    filter(n_obs_each == 10,
+           num_x_interv == 5,
+           n_obs_control == 10*num_interv_each,
+           shift_noise_sd == 7,
+           sd_hiddens == 5) %>%
+    ggplot(aes(x = num_interv_each,
+               y = AUC_mean,
+               col = method)) +
+    geom_point() +
+    geom_line() +
+    facet_wrap(~ type)
+
+## singletargets_2_x_sdw7_sh5
+
+AUC_singletargets_wide %>%
+    filter(n_obs_each == 2,
+           num_x_interv == 5,
+           n_obs_control == 2*num_interv_each,
+           shift_noise_sd == 7,
+           sd_hiddens == 5) %>%
+    ggplot(aes(x = num_interv_each,
+               y = AUC_mean,
+               col = method)) +
+    geom_point() +
+    geom_line() +
+    facet_wrap(~ type)
+
+
+############# Old code (to use for updating the above, then remove)
 
 ### Permuted experiments
 

@@ -1,0 +1,2 @@
+"AUC_anc_mean" "AUC_anc_median" "AUC_anc_quartile1" "AUC_anc_quartile3" "AUC_pa_mean" "AUC_pa_median" "AUC_pa_quartile1" "AUC_pa_quartile3"
+0.501315378254484 0.5 0.424107142857143 0.578703703703704 0.501286338553614 0.5 0.403726708074534 0.597222222222222
