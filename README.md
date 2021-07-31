@@ -1,5 +1,7 @@
 # Causal discovery from interventional data
 
+OBS: The information in README is outdated. There are also many files in the repository that will soon be removed (because they are not used).
+
 This repository contains code for reproducing -- or expanding upon -- simulation results from my BSc thesis.
 
 ## Prerequisites
