@@ -44,7 +44,7 @@ res_tib %>%
         )
         return(dat)
     }) %>%
-    write.table('random_AUC.txt', row.names = FALSE)
+    write.table('30x_random_AUC_summary.txt', row.names = FALSE)
 
 ## Saves all random AUC
 write.table(res_tib, 'collected_AUC_randomguess.txt', row.names = FALSE)
