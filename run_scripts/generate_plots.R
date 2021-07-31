@@ -14,24 +14,12 @@ theme_set(
         legend.key        = element_rect(fill="transparent", colour=NA),
         strip.background = element_rect(fill = "transparent",colour = NA),
         legend.position = 'bottom',
+        legend.box = 'vertical',
         plot.title = element_text(hjust = 0.5)
     )
 )
 
 library(tikzDevice)
-
-## Saves plot in pdf in figures directory
-save_plot <- function(setting_name) {
-    ## Width of saved image in cm
-    imw <- 14
-    ## Height of saved image in cm
-    imh <- 20
-    
-    ggsave(str_c('figures/', setting_name, 'pdf'),
-           width = imw,
-           height = imh,
-           units = 'cm')
-}
 
 imw <- 6
 imh <- 7
@@ -49,25 +37,102 @@ read_wide <- function(file_name) {
     wide_AUC(tibble(readRDS(file_name)))
 }
 
+## Renames pa to Parents and anc to Ancestors
+
+nicer_type <- function(type) {
+    ifelse(type == 'anc', 'Ancestors', 'Parents')
+}
+
+## Reads randomguess performance
+
+random30 <- read.table('local_results/nx30_AUC_random_summary.txt',
+                       header = TRUE)
+
+random30 %>%
+    pivot_longer(cols = everything(),
+                 names_to = c('type', 'measure'),
+                 names_prefix = 'AUC_',
+                 names_sep = '_') %>%
+    pivot_wider(names_from = measure,
+                names_prefix = 'AUC_',
+                values_from = value) %>%
+    mutate(type = nicer_type(type)) ->
+    random30
+
+## I create the line as a ribbon with same upper and lower limit, since an hline
+## extends further along the x-axis than a ribbon.
+random30_lines <- list(
+    geom_hline(data = random30,
+               aes(yintercept = AUC_mean,
+                   lty = 'random-mean'),
+                size = 0.4,
+               col = 1),
+    geom_hline(data = random30,
+               aes(yintercept = AUC_quartile3,
+                   lty = 'random-quartile3'),
+               size = 0.4,
+               col = 1),
+    scale_linetype_manual(name = NULL,
+                            values = c('dashed', 'dotted'))
+)
+
+
 ####### Permuting (non-separate)
 
 ## alltargets AUC
 stor1_all <- read_wide('local_results/stor1/AUC_alltargets.rds')
 stor2_all <- read_wide('local_results/stor2/AUC_alltargets.rds')
-stor4_all <- tibble(readRDS('local_results/stor2/AUC_alltargets.rds'))
+stor4_all <- read_wide('local_results/stor4/AUC_alltargets.rds')
 
 ## TODO: include stor4_all
-AUC_all <- filter(rbind(stor1_all, stor2_all), method != 'randomguess')
+AUC_all <- filter(rbind(stor1_all, stor2_all, stor4_all),
+                  method != 'randomguess')
+AUC_all$type <- nicer_type(AUC_all$type)
 
 ## singletargets AUC
 stor1_single <- read_wide('local_results/stor1/AUC_singletargets.rds')
 stor2_single <- read_wide('local_results/stor2/AUC_singletargets.rds')
-stor4_single <- tibble(readRDS('local_results/stor2/AUC_singletargets.rds'))
 
 ## TODO: include stor4_single
-AUC_single <- rbind(stor1_single, stor2_single)
+AUC_single <- filter(rbind(stor1_single, stor2_single, stor4_single),
+                     method != 'randomguess')
+AUC_single$type <- nicer_type(AUC_single$type)
+
+main_methods <- c('OLS-coef', 'OLS-pvals',
+                  'POLS-coef', 'POLS-pvals',
+                  'DPOLS-coef', 'DPOLS-pvals')
+
+col_main_methods <- c('#44bc44', '#a9d566',
+                      '#2fafff', '#97d7ff',
+                      '#ff8059', '#ffbfac')
+
+scale_main <- scale_color_manual(
+    breaks = main_methods,
+    values = col_main_methods)
+
+mean_shift <- 'mean-shift'
+col_mean_shift <- 'yellow2'
+
+scale_mean <- scale_color_manual(
+    breaks = c(main_methods, mean_shift),
+    values = c(col_main_methods, col_mean_shift))
+
+ICPs <- c('ICP', 'PICP')
+col_ICPs <- c('#feacd0', '#b6a0ff')
+
+scale_ICPs <- scale_color_manual(
+    breaks = c(main_methods, ICPs),
+    values = c(col_main_methods, col_ICPs))
+
+scale_all <- scale_color_manual(
+    breaks = c(main_methods, ICPs, mean_shift),
+    values = c(col_main_methods, col_ICPs, col_mean_shift))
 
 ##### 30 X and 30 H
+
+label_obs <- function(n_obs_each) {
+    paste(n_obs_each, 'obs. per env.')
+}
 
 tikz(file = '~/thesis/figures/alltargets_vary_num_interv.tex', width=imw, height=imh)
 AUC_all %>% 
@@ -75,14 +140,17 @@ AUC_all %>%
            sd_hiddens == 5,
            n_obs_each %in% c(2, 10)) %>% 
     ggplot(aes(x = num_interv, y = AUC_mean, col = method)) +
+    random30_lines +
     geom_line() +
     geom_point(size = 0.8) +
-    facet_grid(n_obs_each ~ type) +
+    facet_grid(n_obs_each ~ type,
+               labeller = labeller(n_obs_each = label_obs)) +
+    scale_main +
     labs(
         x = "Number of environments",
         y = "Average AUC",
         title =
-            "alltargets -- varying number environments"
+            "alltargets -- varying number of environments"
     )
 endoffile <- dev.off()
 
@@ -92,9 +160,11 @@ AUC_all %>%
            sd_hiddens == 5,
            num_interv == 500) %>% 
     ggplot(aes(x = n_obs_each, y = AUC_mean, col = method)) +
+    random30_lines +
     geom_line() +
     geom_point() +
     facet_wrap( ~ type, nrow = 2) +
+    scale_main +
     labs(
         x = "Number of observations per environment",
         y = "Average AUC",
@@ -109,8 +179,10 @@ AUC_all %>%
            sd_hiddens == 5,
            num_interv*n_obs_each == 5000) %>% 
     ggplot(aes(x = log(num_interv / n_obs_each), y = AUC_mean, col = method)) +
+    random30_lines +
     geom_line() +
     geom_point() +
+    scale_main +
     facet_wrap( ~ type, nrow = 2) +
        labs(
            x = "$\\log \\frac{\\# \\mathrm{environments}}{\\# \\mathrm{observations\\ per\\ environment}}$",
@@ -126,9 +198,12 @@ AUC_all %>%
            (num_interv == 500 & n_obs_each == 10) |
            (num_interv == 2500 & n_obs_each == n_obs_each)) %>% 
     ggplot(aes(x = shift_noise_sd, y = AUC_mean, col = method)) +
+    random30_lines +
     geom_line() +
     geom_point() +
-    facet_grid(n_obs_each ~ type) +
+    scale_main +
+    facet_grid(n_obs_each ~ type,
+               labeller = labeller(n_obs_each = label_obs)) +
        labs(
            x = "Standard deviation of mean shifts",
            y = "Average AUC",
@@ -143,9 +218,12 @@ AUC_all %>%
            (num_interv == 500 & n_obs_each == 10) |
            (num_interv == 2500 & n_obs_each == 2)) %>% 
     ggplot(aes(x = sd_hiddens, y = AUC_mean, col = method)) +
+    random30_lines +
     geom_line() +
     geom_point() +
-    facet_grid(n_obs_each ~ type) +
+    scale_main +
+    facet_grid(n_obs_each ~ type,
+               labeller = labeller(n_obs_each = label_obs)) +
        labs(
            x = "Standard deviation of hidden variables",
            y = "Average AUC",
@@ -154,7 +232,55 @@ AUC_all %>%
        )
 endoffile <- dev.off()
 
+## singletargets
 
+label_num_x_interv <- function(num_x_interv) {
+    sprintf("%s intervention targets", num_x_interv)
+}
+
+tikz(file = '~/thesis/figures/singletargets_2_x_y_2x_7_5.tex', width=imw, height=imh)
+AUC_single %>% 
+    filter(shift_noise_sd == 7,
+           sd_hiddens == 5,
+           n_obs_each == 2,
+           num_x_interv %in% c(15, 30),
+           n_obs_control == n_obs_each * num_interv_each) %>% 
+    ggplot(aes(x = num_interv_each, y = AUC_mean, col = method)) +
+    random30_lines +
+    geom_line() +
+    geom_point() +
+    scale_mean +
+    facet_grid(num_x_interv ~ type,
+               labeller = labeller(num_x_interv = label_num_x_interv)) +
+       labs(
+           x = "Number of repetitions of each experimental setting",
+           y = "Average AUC",
+           title =
+               "singletargets -- varying number of repetitions per environment"
+       )
+endoffile <- dev.off()
+
+tikz(file = '~/thesis/figures/singletargets_10_x_y_10x_7_5.tex', width=imw, height=imh)
+AUC_single %>% 
+    filter(shift_noise_sd == 7,
+           sd_hiddens == 5,
+           n_obs_each == 10,
+           num_x_interv %in% c(15, 30),
+           n_obs_control == n_obs_each * num_interv_each) %>% 
+    ggplot(aes(x = num_interv_each, y = AUC_mean, col = method)) +
+    random30_lines +
+    geom_line() +
+    geom_point() +
+    scale_mean +
+    facet_grid(num_x_interv ~ type,
+               labeller = labeller(num_x_interv = label_num_x_interv)) +
+       labs(
+           x = "Number of repetitions of each experimental setting",
+           y = "Average AUC",
+           title =
+               "singletargets -- varying number of repetitions per environment"
+       )
+endoffile <- dev.off()
 
 ### End of implemented
 
