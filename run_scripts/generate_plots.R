@@ -181,13 +181,53 @@ AUC_all %>%
 
 endoffile <- dev.off()
 
+
+## The following plot contains ribbons giving the first and third quartiles of
+## the AUC for each method
+
+tikz(file = '~/thesis/figures/alltargets_vary_num_interv_ribbons.tex', width=imw, height=imh)
+
+AUC_all %>% 
+    filter(shift_noise_sd == 7,
+           sd_hiddens == 5,
+           n_obs_each %in% c(2, 10),
+           method %in% c('OLS-coef',
+                         'POLS-coef',
+                         'DPOLS-coef')) %>% 
+    ggplot(aes(x = num_interv, y = AUC_mean, col = method)) +
+    random30_lines +
+    geom_line() +
+    geom_line(aes(y = AUC_median), lty = 'dotted') +
+    geom_ribbon(aes(ymin = AUC_quartile1,
+                    ymax = AUC_quartile3,
+                    fill = method),
+                alpha = 0.05,
+                lty = 2) +
+    geom_point(size = 0.8) +
+    facet_grid(n_obs_each + type ~ problem,
+               labeller = labeller(n_obs_each = label_obs)) +
+    scale_main +
+    labs(
+        x = "$\\texttt{ne}$",
+        y = "Average AUC",
+        title = "Quartiles (dotted and dashed lines) of coef methods compared.",
+        subtitle = "alltargets; $\\mathtt{sdw} = 7, \\mathtt{sdh} = 5$."
+    ) +
+    scale_fill_manual(name = NULL,
+                      breaks = main_methods,
+                      values = col_main_methods,
+                      guide = FALSE)
+
+endoffile <- dev.off()
+
+
 tikz(file = '~/thesis/figures/alltargets_x_500_7_5.tex', width=imw, height=imh)
 
 AUC_all %>% 
     filter(shift_noise_sd == 7,
            sd_hiddens == 5,
            num_interv == 500) %>% 
-    ggplot(aes(x = n_obs_each, y = AUC_mean, col = method)) +
+    ggplot(aes(x = n_obs_each, y = AUC_median, col = method)) +
     random30_lines +
     geom_line() +
     geom_point() +
