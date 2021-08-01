@@ -50,10 +50,8 @@ nicer_type <- function(type) {
 
 ## Reads randomguess performance
 
-random30 <- read.table('local_results/nx30_AUC_random_summary.txt',
-                       header = TRUE)
-
-random30 %>%
+read.table('local_results/nx30_AUC_random_summary.txt',
+           header = TRUE) %>%
     pivot_longer(cols = everything(),
                  names_to = c('type', 'measure'),
                  names_prefix = 'AUC_',
@@ -64,23 +62,55 @@ random30 %>%
     mutate(type = nicer_type(type)) ->
     random30
 
-## I create the line as a ribbon with same upper and lower limit, since an hline
-## extends further along the x-axis than a ribbon.
-random30_lines <- list(
-    geom_hline(data = random30,
-               aes(yintercept = AUC_mean,
-                   lty = 'average'),
-                size = 0.5,
-               col = 1),
-    geom_hline(data = random30,
-               aes(yintercept = AUC_quartile3,
-                   lty = 'third quartile'),
-               size = 0.5,
-               col = 1),
-    scale_linetype_manual(name = 'random guessing',
-                          values = c('dashed', 'dotted'))
-)
+## random performance with guessing after parents
+read.table('local_results/pa_then_random_AUC_summary.txt',
+           header = TRUE) %>%
+    pivot_longer(cols = everything(),
+                 names_to = c('type', 'measure'),
+                 names_prefix = 'AUC_',
+                 names_sep = '_') %>%
+    pivot_wider(names_from = measure,
+                names_prefix = 'AUC_',
+                values_from = value) %>%
+    mutate(type = nicer_type(type)) %>%
+    filter(type == 'Ancestors') ->
+    random_after_pa
 
+## change colnames so they don't match those of AUC_all and AUC_single from
+## below
+colnames(random30) <- paste('r', colnames(random30), sep = '_')
+colnames(random30)[1] <- 'type'
+
+colnames(random_after_pa) <- paste('rp', colnames(random_after_pa), sep = '_')
+colnames(random_after_pa)[1] <- 'type'
+
+random_collected <- left_join(random30, random_after_pa, by = 'type')
+
+## Lines and ribbons to add to all ggplots
+random_lines <- list(
+    geom_hline(aes(yintercept = r_AUC_mean,
+                   lty = 'all-random')),
+    geom_hline(aes(yintercept = rp_AUC_mean,
+                   lty = 'random-after-parents')),
+    geom_ribbon(aes(ymin = rp_AUC_quartile1,
+                    ymax = rp_AUC_quartile3,
+                    alpha = ifelse(method == 'OLS-coef',
+                                   'a',
+                                   'b')),
+                lty = 0),
+    geom_ribbon(aes(ymin = r_AUC_quartile1,
+                    ymax = r_AUC_quartile3,
+                    alpha = ifelse(method == 'OLS-coef',
+                                   'a',
+                                   'b')),
+                lty = 0),
+    scale_linetype_manual(name = 'random guessing',
+                          values = c('dashed', 'dotted')),
+    scale_alpha_manual(name = 'random guessing',
+                       values = c(0.07, 0),
+                       guide = 'none'),
+    guides(colour = guide_legend(override.aes = list(fill = 0.01)))
+)
 
 ####### 30 X and 30 H
 
@@ -133,7 +163,8 @@ col_main_methods <- c('#44bc44', '#a9d566',
 
 scale_main <- scale_color_manual(
     breaks = main_methods,
-    values = col_main_methods)
+    values = col_main_methods
+)
 
 mean_shift <- 'mean-shift'
 col_mean_shift <- 'yellow2'
@@ -146,12 +177,12 @@ ICPs <- c('ICP', 'PICP')
 col_ICPs <- c('#feacd0', '#b6a0ff')
 
 scale_ICPs <- scale_color_manual(
-    breaks = c(main_methods, ICPs),
-    values = c(col_main_methods, col_ICPs))
+    breaks = c(main_methods, ICPs, 'random'),
+    values = c(col_main_methods, col_ICPs, '#000000'))
 
 scale_all <- scale_color_manual(
-    breaks = c(main_methods, ICPs, mean_shift),
-    values = c(col_main_methods, col_ICPs, col_mean_shift))
+    breaks = c(main_methods, ICPs, mean_shift, 'random'),
+    values = c(col_main_methods, col_ICPs, col_mean_shift, '#000000'))
 
 ##### 30 X and 30 H
 
@@ -159,14 +190,20 @@ label_obs <- function(n_obs_each) {
     sprintf('$\\mathtt{no} = %s$', n_obs_each)
 }
 
+AUC_all <- left_join(AUC_all, random_collected, by = 'type') %>%
+    mutate(is_OLS_coef = method == 'OLS-coef')
+AUC_single <- left_join(AUC_single, random_collected, by = 'type')
+
 tikz(file = '~/thesis/figures/alltargets_vary_num_interv.tex', width=imw, height=imh)
+
+
 
 AUC_all %>% 
     filter(shift_noise_sd == 7,
            sd_hiddens == 5,
            n_obs_each %in% c(2, 10)) %>% 
     ggplot(aes(x = num_interv, y = AUC_mean, col = method)) +
-    random30_lines +
+    random_lines +
     geom_line() +
     geom_point(size = 0.8) +
     facet_grid(n_obs_each + type ~ problem,
@@ -176,8 +213,9 @@ AUC_all %>%
         x = "$\\texttt{ne}$",
         y = "Average AUC",
         title = "Varying number of environments.",
-        subtitle = "alltargets; $\\mathtt{sdw} = 7, \\mathtt{sdh} = 5$."
-    )
+        subtitle = "alltargets; $\\mathtt{sdw} = 7, \\mathtt{sdh} = 5$.",
+    ) +
+    coord_cartesian(ylim = c(0.5, NA))
 
 endoffile <- dev.off()
 
@@ -195,7 +233,6 @@ AUC_all %>%
                          'POLS-coef',
                          'DPOLS-coef')) %>% 
     ggplot(aes(x = num_interv, y = AUC_mean, col = method)) +
-    random30_lines +
     geom_line() +
     geom_line(aes(y = AUC_median), lty = 'dotted') +
     geom_ribbon(aes(ymin = AUC_quartile1,
@@ -210,13 +247,9 @@ AUC_all %>%
     labs(
         x = "$\\texttt{ne}$",
         y = "Average AUC",
-        title = "Quartiles (dotted and dashed lines) of coef methods compared.",
+        title = "Median (dotted), and 1st and 3rd quartiles (dashed) of coef methods compared.",
         subtitle = "alltargets; $\\mathtt{sdw} = 7, \\mathtt{sdh} = 5$."
-    ) +
-    scale_fill_manual(name = NULL,
-                      breaks = main_methods,
-                      values = col_main_methods,
-                      guide = FALSE)
+    )
 
 endoffile <- dev.off()
 
@@ -228,7 +261,7 @@ AUC_all %>%
            sd_hiddens == 5,
            num_interv == 500) %>% 
     ggplot(aes(x = n_obs_each, y = AUC_median, col = method)) +
-    random30_lines +
+    random_lines +
     geom_line() +
     geom_point() +
     facet_grid(type ~ problem) +
@@ -240,15 +273,18 @@ AUC_all %>%
             "Varying number of observations per environment.",
         subtitle =
             "alltargets; $\\mathtt{ne} = 500, \\mathtt{sdw} = 7, \\mathtt{sdh} = 5$."
-    )
+    ) +
+    coord_cartesian(ylim = c(0.5, NA))
 
 endoffile <- dev.off()
 
 tikz(file = '~/thesis/figures/alltargets_5000obs.tex', width=imw, height=imh)
 
+    
 ## There are a couple of points here, where I ran two differen simulations over
 ## 1000 DAGs, so I first take the average of these two averages, to not get
 ## multiple points with the same x-coordinate.
+
 AUC_all %>% 
     filter(shift_noise_sd == 7,
            sd_hiddens == 5,
@@ -261,8 +297,9 @@ AUC_all %>%
              type,
              problem) %>%
     summarise(AUC_mean = mean(AUC_mean)) %>%
+    left_join(random_collected, by = 'type') %>%
     ggplot(aes(x = log(num_interv / n_obs_each), y = AUC_mean, col = method)) +
-    random30_lines +
+    random_lines +
     geom_line() +
     geom_point() +
     scale_main +
@@ -274,7 +311,8 @@ AUC_all %>%
                "Few env. with many obs. vs. many env. with few obs.",
            subtitle =
                'alltargets; $\\mathtt{no}\\cdot\\mathtt{ne} = 5000, \\mathtt{sdw} = 7, \\mathtt{sdh} = 5$.'
-       )
+       ) +
+    coord_cartesian(ylim = c(0.5, NA))
 
 endoffile <- dev.off()
 
@@ -292,7 +330,7 @@ AUC_all %>%
            (num_interv == 500 & n_obs_each == 10) |
            (num_interv == 2500 & n_obs_each == 2)) %>% 
     ggplot(aes(x = shift_noise_sd, y = AUC_mean, col = method)) +
-    random30_lines +
+    random_lines +
     geom_line() +
     geom_point() +
     scale_main +
@@ -316,7 +354,7 @@ AUC_all %>%
            (num_interv == 500 & n_obs_each == 10) |
            (num_interv == 2500 & n_obs_each == 2)) %>% 
     ggplot(aes(x = sd_hiddens, y = AUC_mean, col = method)) +
-    random30_lines +
+    random_lines +
     geom_line() +
     geom_point() +
     scale_main +
@@ -353,11 +391,11 @@ AUC_single %>%
            num_x_interv %in% c(15, 30),
            n_obs_control == n_obs_each * num_interv_each) %>% 
     ggplot(aes(x = num_interv_each, y = AUC_mean, col = method)) +
-    random30_lines +
+    random_lines +
     geom_line() +
     geom_point() +
     scale_mean +
-    facet_grid(problem + num_x_interv + type ~ n_obs_each,
+    facet_grid(num_x_interv + type ~ problem + n_obs_each,
                labeller = labeller(num_x_interv = label_num_x_interv,
                                    n_obs_each = label_obs)) +
        labs(
@@ -393,6 +431,23 @@ read_wide("local_results/nx5/AUC_singletargets.rds") %>%
     
 ## alltargets
 
+read.table('local_results/nx5_AUC_random_summary.txt',
+           header = TRUE) %>%
+    pivot_longer(cols = everything(),
+                 names_to = c('type', 'measure'),
+                 names_prefix = 'AUC_',
+                 names_sep = '_') %>%
+    pivot_wider(names_from = measure,
+                names_prefix = 'AUC_',
+                values_from = value) %>%
+    mutate(type = nicer_type(type)) ->
+    random5
+
+colnames(random5)[2:5] <- paste('r', colnames(random5)[2:5], sep = '_')
+
+AUC_all_5 <- left_join(AUC_all_5, random5, by = 'type')
+AUC_single_5 <- left_join(AUC_single_5, random5, by = 'type')
+
 tikz(file = '~/thesis/figures/alltargets_vary_num_interv_nx5.tex', width=imw, height=imh)
 
 AUC_all_5 %>% 
@@ -400,7 +455,7 @@ AUC_all_5 %>%
            sd_hiddens == 5,
            n_obs_each %in% c(2, 10)) %>% 
     ggplot(aes(x = num_interv, y = AUC_mean, col = method)) +
-    random30_lines +
+    geom_hline(aes(yintercept = r_AUC_mean, col = 'random')) +
     geom_line() +
     geom_point(size = 0.8) +
     facet_grid(n_obs_each + type ~ problem,
@@ -428,7 +483,7 @@ AUC_single_5 %>%
            num_x_interv == 5,
            n_obs_control == n_obs_each * num_interv_each) %>% 
     ggplot(aes(x = num_interv_each, y = AUC_mean, col = method)) +
-    random30_lines +
+    geom_hline(aes(yintercept = r_AUC_mean, col = 'random')) +    
     geom_line() +
     geom_point() +
     scale_all +

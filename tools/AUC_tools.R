@@ -308,7 +308,7 @@ save_AUC <- function(dir) {
     tib %>%
         group_by(DAG_id, method) %>%
         summarise(AUC_anc = get_AUC(tpr_anc, fpr_anc),
-                  AUC_pa = get_AUC(tpr_pa, fpr_pa),
+                  AUC_pa = get_AUCtt(tpr_pa, fpr_pa),
                   .groups = 'drop') ->
         all_AUC
     saveRDS(all_AUC, str_c(dir, '/all_AUC.rds'))
