@@ -15,14 +15,20 @@ theme_set(
         strip.background = element_rect(fill = "transparent",colour = NA),
         legend.position = 'bottom',
         legend.box = 'vertical',
-        plot.title = element_text(hjust = 0.5)
+        plot.title = element_text(size = 12,
+                                  hjust = 0),
+        plot.subtitle = element_text(size = 10,
+                                     margin = margin(t = 5, b = 3),
+                                     hjust = 0)
     )
 )
 
+## Plots will be converted to tikz code saved in tex files.
 library(tikzDevice)
 
-imw <- 6
-imh <- 7
+## Width and height of results images (in inches)
+imw <- 6.5
+imh <- 8.5
 
 ## Converts AUC_tib to a wider format with a column for each of AUC_mean, AUC_median,
 ## AUC_quartile3, and AUC_quartile4.
@@ -38,7 +44,6 @@ read_wide <- function(file_name) {
 }
 
 ## Renames pa to Parents and anc to Ancestors
-
 nicer_type <- function(type) {
     ifelse(type == 'anc', 'Ancestors', 'Parents')
 }
@@ -151,7 +156,7 @@ scale_all <- scale_color_manual(
 ##### 30 X and 30 H
 
 label_obs <- function(n_obs_each) {
-    paste(n_obs_each, 'obs. per env.')
+    sprintf('$\\mathtt{no} = %s$', n_obs_each)
 }
 
 tikz(file = '~/thesis/figures/alltargets_vary_num_interv.tex', width=imw, height=imh)
@@ -168,10 +173,10 @@ AUC_all %>%
                labeller = labeller(n_obs_each = label_obs)) +
     scale_main +
     labs(
-        x = "Number of environments",
+        x = "$\\texttt{ne}$",
         y = "Average AUC",
-        title =
-            "alltargets -- varying number of environments"
+        title = "Varying number of environments.",
+        subtitle = "alltargets; $\\mathtt{sdw} = 7, \\mathtt{sdh} = 5$."
     )
 
 endoffile <- dev.off()
@@ -189,20 +194,33 @@ AUC_all %>%
     facet_grid(type ~ problem) +
     scale_main +
     labs(
-        x = "Number of observations per environment",
+        x = "\\texttt{no}",
         y = "Average AUC",
         title =
-            "alltargets -- varying number of observations per environment"
+            "Varying number of observations per environment.",
+        subtitle =
+            "alltargets; $\\mathtt{ne} = 500, \\mathtt{sdw} = 7, \\mathtt{sdh} = 5$."
     )
 
 endoffile <- dev.off()
 
 tikz(file = '~/thesis/figures/alltargets_5000obs.tex', width=imw, height=imh)
 
+## There are a couple of points here, where I ran two differen simulations over
+## 1000 DAGs, so I first take the average of these two averages, to not get
+## multiple points with the same x-coordinate.
 AUC_all %>% 
     filter(shift_noise_sd == 7,
            sd_hiddens == 5,
-           num_interv*n_obs_each == 5000) %>% 
+           num_interv*n_obs_each == 5000) %>%
+    group_by(n_obs_each,
+             num_interv,
+             shift_noise_sd,
+             sd_hiddens,
+             method,
+             type,
+             problem) %>%
+    summarise(AUC_mean = mean(AUC_mean)) %>%
     ggplot(aes(x = log(num_interv / n_obs_each), y = AUC_mean, col = method)) +
     random30_lines +
     geom_line() +
@@ -210,13 +228,22 @@ AUC_all %>%
     scale_main +
     facet_grid(type ~ problem) +
        labs(
-           x = "$\\log \\frac{\\# \\mathrm{environments}}{\\# \\mathrm{observations\\ per\\ environment}}$",
+           x = "$\\log \\frac{\\mathtt{ne}}{\\mathtt{no}}$",
            y = "Average AUC",
            title =
-               "alltargets -- few env. with many obs. vs. many env. with few obs."
+               "Few env. with many obs. vs. many env. with few obs.",
+           subtitle =
+               'alltargets; $\\mathtt{no}\\cdot\\mathtt{ne} = 5000, \\mathtt{sdw} = 7, \\mathtt{sdh} = 5$.'
        )
 
 endoffile <- dev.off()
+
+label_obs_extra <- function(n_obs_each) {
+    ifelse(n_obs_each == 2,
+           '{\\scriptsize $(\\mathtt{no}, \\mathtt{ne}) = (2,2500)$}',
+           '{\\scriptsize $(\\mathtt{no}, \\mathtt{ne}) = (10,500)$}')
+}
+
 
 tikz(file = '~/thesis/figures/alltargets_vary_sdw.tex', width=imw, height=imh)
 
@@ -230,12 +257,14 @@ AUC_all %>%
     geom_point() +
     scale_main +
     facet_grid(n_obs_each + type ~ problem,
-               labeller = labeller(n_obs_each = label_obs)) +
+               labeller = labeller(n_obs_each = label_obs_extra)) +
        labs(
-           x = "Standard deviation of mean shifts",
+           x = "\\texttt{sdw}",
            y = "Average AUC",
            title =
-               "alltargets -- varying standard deviation of mean shifts $W$"
+               "Varying standard deviation of mean shifts $W$.",
+           subtitle =
+               'alltargets; $\\mathtt{sdh} = 5$.'
        )
 
 endoffile <- dev.off()
@@ -252,12 +281,14 @@ AUC_all %>%
     geom_point() +
     scale_main +
     facet_grid(n_obs_each + type ~ problem,
-               labeller = labeller(n_obs_each = label_obs)) +
+               labeller = labeller(n_obs_each = label_obs_extra)) +
        labs(
-           x = "Standard deviation of hidden variables",
+           x = "\\texttt{sdh}",
            y = "Average AUC",
            title =
-               "alltargets -- varying standard deviation of hidden variables"
+               "Varying standard deviation of hidden variables.",
+           subtitle =
+               'alltargets; $\\mathtt{sdw} = 7$.'
        )
 
 endoffile <- dev.off()
@@ -265,7 +296,7 @@ endoffile <- dev.off()
 ## singletargets
 
 label_num_x_interv <- function(num_x_interv) {
-    sprintf("%s intervention targets", num_x_interv)
+    sprintf("$\\mathtt{nxi} = %s$", num_x_interv)
 }
 
 label_obs_brief <- function(n_obs_each) {
@@ -273,7 +304,7 @@ label_obs_brief <- function(n_obs_each) {
 }
 
 ## TODO: Fix scales on the short Problem A x-axis so there is only a 0 and 500.
-tikz(file = '~/thesis/figures/singletargets_z_x_y_2x_7_5.tex', width=imw, height=imh)
+tikz(file = '~/thesis/figures/singletargets_z_x_y_zx_7_5.tex', width=imw, height=imh)
 
 AUC_single %>% 
     filter(shift_noise_sd == 7,
@@ -286,29 +317,43 @@ AUC_single %>%
     geom_line() +
     geom_point() +
     scale_mean +
-    facet_grid(num_x_interv + type ~ n_obs_each + problem,
+    facet_grid(problem + num_x_interv + type ~ n_obs_each,
                labeller = labeller(num_x_interv = label_num_x_interv,
-                                   n_obs_each = label_obs_brief),
-               scales = 'free_x',
-               space = 'free_x') +
+                                   n_obs_each = label_obs)) +
        labs(
-           x = "Number of repetitions of each experimental setting",
+           x = "\\texttt{noe}",
            y = "Average AUC",
            title =
-               "singletargets -- varying number of repetitions per environment"
+               "Varying number of observations per environment.",
+           subtitle =
+               'singletargets; $\\mathtt{noc} = \\mathtt{no}\\cdot \\mathtt{nei}, \\mathtt{sdw} = 7, \\mathtt{sdh} = 5$.'
        )
 
 endoffile <- dev.off()
 
-### End of implemented
-
-stopifnot('Done executing implemented plots' = FALSE)
-
 ##### 5 X and 5 H
 
 ## alltargets
+read_wide("local_results/nx5/AUC_alltargets.rds") %>%
+    mutate(problem = 'Problem B') %>%
+    rbind(read_wide('local_results/nx5_sep/AUC_alltargets.rds') %>%
+          mutate(problem = 'Problem A')) %>%
+    filter(method != 'randomguess') %>%
+    mutate(type = nicer_type(type)) ->
+    AUC_all_5
 
-tikz(file = '~/thesis/figures/alltargets_vary_num_interv_5.tex', width=imw, height=imh)
+## singletargets
+read_wide("local_results/nx5/AUC_singletargets.rds") %>%
+    mutate(problem = 'Problem B') %>%
+    rbind(read_wide('local_results/nx5_sep/AUC_singletargets.rds') %>%
+          mutate(problem = 'Problem A')) %>%
+    filter(method != 'randomguess') %>%
+    mutate(type = nicer_type(type)) ->
+    AUC_single_5
+    
+## alltargets
+
+tikz(file = '~/thesis/figures/alltargets_vary_num_interv_nx5.tex', width=imw, height=imh)
 
 AUC_all_5 %>% 
     filter(shift_noise_sd == 7,
@@ -322,17 +367,19 @@ AUC_all_5 %>%
                labeller = labeller(n_obs_each = label_obs)) +
     scale_ICPs +
     labs(
-        x = "Number of environments",
+        x = "\\texttt{ne}",
         y = "Average AUC",
         title =
-            "alltargets -- varying number of environments"
+            "Varying number of environments.",
+        subtitle =
+            'alltargets; $\\mathtt{sdw} = 7, \\mathtt{sdh} = 5$.'
     )
 
 endoffile <- dev.off()
 
 ## singletargets
 
-tikz(file = '~/thesis/figures/singletargets_z_x_y_2x_7_5.tex', width=imw, height=imh)
+tikz(file = '~/thesis/figures/singletargets_z_x_y_zx_7_5_nx5.tex', width=imw, height=imh)
 
 AUC_single_5 %>% 
     filter(shift_noise_sd == 7,
@@ -345,18 +392,18 @@ AUC_single_5 %>%
     geom_line() +
     geom_point() +
     scale_all +
-    facet_grid(type ~ n_obs_each + problem,
+    facet_grid(problem + type ~ n_obs_each,
                labeller = labeller(num_x_interv = label_num_x_interv,
-                                   n_obs_each = label_obs_brief),
+                                   n_obs_each = label_obs),
                scales = 'free_x',
                space = 'free_x') +
        labs(
-           x = "Number of repetitions of each experimental setting",
+           x = "\\texttt{no}",
            y = "Average AUC",
            title =
-               "singletargets -- varying number of repetitions per environment"
+               "Varying number of observations per environment.",
+           subtitle =
+               'alltargets; $\\mathtt{nxi} = 5, \\mathtt{noc} = \\mathtt{no}\\cdot \\mathtt{nei}, \\mathtt{sdw} = 7, \\mathtt{sdh} = 5$.'
        )
 
 endoffile <- dev.off()
-
-
