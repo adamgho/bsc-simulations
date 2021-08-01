@@ -64,43 +64,63 @@ random30 %>%
 random30_lines <- list(
     geom_hline(data = random30,
                aes(yintercept = AUC_mean,
-                   lty = 'random-mean'),
-                size = 0.4,
+                   lty = 'average'),
+                size = 0.5,
                col = 1),
     geom_hline(data = random30,
                aes(yintercept = AUC_quartile3,
-                   lty = 'random-quartile3'),
-               size = 0.4,
+                   lty = 'third quartile'),
+               size = 0.5,
                col = 1),
-    scale_linetype_manual(name = NULL,
-                            values = c('dashed', 'dotted'))
+    scale_linetype_manual(name = 'random guessing',
+                          values = c('dashed', 'dotted'))
 )
 
 
-####### Permuting (non-separate)
+####### 30 X and 30 H
 
-## alltargets AUC
+## alltargets AUC (permuted - Problem B)
 stor1_all <- read_wide('local_results/stor1/AUC_alltargets.rds')
 stor2_all <- read_wide('local_results/stor2/AUC_alltargets.rds')
 stor4_all <- read_wide('local_results/stor4/AUC_alltargets.rds')
+## alltargets AUC (separate - Problem A)
+stor3_all <- read_wide('local_results/stor3/AUC_alltargets.rds')
+stor5_all <- read_wide('local_results/stor5/AUC_alltargets.rds')
+stor6_all <- read_wide('local_results/stor6/AUC_alltargets.rds')
 
-## TODO: include stor4_all
-AUC_all <- filter(rbind(stor1_all, stor2_all, stor4_all),
-                  method != 'randomguess')
-AUC_all$type <- nicer_type(AUC_all$type)
+## Collect and add problem column describing whether the data is from separate
+## experiments (Problem A) or permuted (Problem B).
+rbind(stor1_all, stor2_all, stor4_all) %>%
+    mutate(problem = 'Problem B') %>%
+    rbind(rbind(stor3_all, stor5_all, stor6_all) %>%
+          mutate(problem = 'Problem A')) %>%
+    filter(method != 'randomguess') %>%
+    mutate(type = nicer_type(type)) ->
+    AUC_all
 
 ## singletargets AUC
+## permuted (Problem B)
 stor1_single <- read_wide('local_results/stor1/AUC_singletargets.rds')
 stor2_single <- read_wide('local_results/stor2/AUC_singletargets.rds')
+## separate (Problem A)
+stor5_single <- read_wide('local_results/stor5/AUC_singletargets.rds')
 
-## TODO: include stor4_single
-AUC_single <- filter(rbind(stor1_single, stor2_single, stor4_single),
-                     method != 'randomguess')
-AUC_single$type <- nicer_type(AUC_single$type)
+rbind(stor1_single, stor2_single) %>%
+    mutate(problem = 'Problem B') %>%
+    rbind(mutate(stor5_single, problem = 'Problem A')) %>%
+    filter(method != 'randomguess') %>%
+    mutate(type = nicer_type(type)) ->
+    AUC_single
+
+## Color scales: Have to set colors manually - otherwise the methods get
+## different colors in different plots (since there is a varying number of
+## methods in the plots).
+## Some of the colors are from TODO: insert link to modus gitlab.
 
 main_methods <- c('OLS-coef', 'OLS-pvals',
                   'POLS-coef', 'POLS-pvals',
                   'DPOLS-coef', 'DPOLS-pvals')
+
 
 col_main_methods <- c('#44bc44', '#a9d566',
                       '#2fafff', '#97d7ff',
@@ -135,6 +155,7 @@ label_obs <- function(n_obs_each) {
 }
 
 tikz(file = '~/thesis/figures/alltargets_vary_num_interv.tex', width=imw, height=imh)
+
 AUC_all %>% 
     filter(shift_noise_sd == 7,
            sd_hiddens == 5,
@@ -143,7 +164,7 @@ AUC_all %>%
     random30_lines +
     geom_line() +
     geom_point(size = 0.8) +
-    facet_grid(n_obs_each ~ type,
+    facet_grid(n_obs_each + type ~ problem,
                labeller = labeller(n_obs_each = label_obs)) +
     scale_main +
     labs(
@@ -152,9 +173,11 @@ AUC_all %>%
         title =
             "alltargets -- varying number of environments"
     )
+
 endoffile <- dev.off()
 
 tikz(file = '~/thesis/figures/alltargets_x_500_7_5.tex', width=imw, height=imh)
+
 AUC_all %>% 
     filter(shift_noise_sd == 7,
            sd_hiddens == 5,
@@ -163,7 +186,7 @@ AUC_all %>%
     random30_lines +
     geom_line() +
     geom_point() +
-    facet_wrap( ~ type, nrow = 2) +
+    facet_grid(type ~ problem) +
     scale_main +
     labs(
         x = "Number of observations per environment",
@@ -171,9 +194,11 @@ AUC_all %>%
         title =
             "alltargets -- varying number of observations per environment"
     )
+
 endoffile <- dev.off()
 
 tikz(file = '~/thesis/figures/alltargets_5000obs.tex', width=imw, height=imh)
+
 AUC_all %>% 
     filter(shift_noise_sd == 7,
            sd_hiddens == 5,
@@ -183,26 +208,28 @@ AUC_all %>%
     geom_line() +
     geom_point() +
     scale_main +
-    facet_wrap( ~ type, nrow = 2) +
+    facet_grid(type ~ problem) +
        labs(
            x = "$\\log \\frac{\\# \\mathrm{environments}}{\\# \\mathrm{observations\\ per\\ environment}}$",
            y = "Average AUC",
            title =
                "alltargets -- few env. with many obs. vs. many env. with few obs."
        )
+
 endoffile <- dev.off()
 
 tikz(file = '~/thesis/figures/alltargets_vary_sdw.tex', width=imw, height=imh)
+
 AUC_all %>% 
     filter(sd_hiddens == 5,
            (num_interv == 500 & n_obs_each == 10) |
-           (num_interv == 2500 & n_obs_each == n_obs_each)) %>% 
+           (num_interv == 2500 & n_obs_each == 2)) %>% 
     ggplot(aes(x = shift_noise_sd, y = AUC_mean, col = method)) +
     random30_lines +
     geom_line() +
     geom_point() +
     scale_main +
-    facet_grid(n_obs_each ~ type,
+    facet_grid(n_obs_each + type ~ problem,
                labeller = labeller(n_obs_each = label_obs)) +
        labs(
            x = "Standard deviation of mean shifts",
@@ -210,9 +237,11 @@ AUC_all %>%
            title =
                "alltargets -- varying standard deviation of mean shifts $W$"
        )
+
 endoffile <- dev.off()
 
 tikz(file = '~/thesis/figures/alltargets_vary_sdh.tex', width=imw, height=imh)
+
 AUC_all %>% 
     filter(shift_noise_sd == 7,
            (num_interv == 500 & n_obs_each == 10) |
@@ -222,7 +251,7 @@ AUC_all %>%
     geom_line() +
     geom_point() +
     scale_main +
-    facet_grid(n_obs_each ~ type,
+    facet_grid(n_obs_each + type ~ problem,
                labeller = labeller(n_obs_each = label_obs)) +
        labs(
            x = "Standard deviation of hidden variables",
@@ -230,6 +259,7 @@ AUC_all %>%
            title =
                "alltargets -- varying standard deviation of hidden variables"
        )
+
 endoffile <- dev.off()
 
 ## singletargets
@@ -238,33 +268,17 @@ label_num_x_interv <- function(num_x_interv) {
     sprintf("%s intervention targets", num_x_interv)
 }
 
-tikz(file = '~/thesis/figures/singletargets_2_x_y_2x_7_5.tex', width=imw, height=imh)
-AUC_single %>% 
-    filter(shift_noise_sd == 7,
-           sd_hiddens == 5,
-           n_obs_each == 2,
-           num_x_interv %in% c(15, 30),
-           n_obs_control == n_obs_each * num_interv_each) %>% 
-    ggplot(aes(x = num_interv_each, y = AUC_mean, col = method)) +
-    random30_lines +
-    geom_line() +
-    geom_point() +
-    scale_mean +
-    facet_grid(num_x_interv ~ type,
-               labeller = labeller(num_x_interv = label_num_x_interv)) +
-       labs(
-           x = "Number of repetitions of each experimental setting",
-           y = "Average AUC",
-           title =
-               "singletargets -- varying number of repetitions per environment"
-       )
-endoffile <- dev.off()
+label_obs_brief <- function(n_obs_each) {
+    paste(n_obs_each, 'obs./env.')
+}
 
-tikz(file = '~/thesis/figures/singletargets_10_x_y_10x_7_5.tex', width=imw, height=imh)
+## TODO: Fix scales on the short Problem A x-axis so there is only a 0 and 500.
+tikz(file = '~/thesis/figures/singletargets_z_x_y_2x_7_5.tex', width=imw, height=imh)
+
 AUC_single %>% 
     filter(shift_noise_sd == 7,
            sd_hiddens == 5,
-           n_obs_each == 10,
+           n_obs_each %in% c(2, 10),
            num_x_interv %in% c(15, 30),
            n_obs_control == n_obs_each * num_interv_each) %>% 
     ggplot(aes(x = num_interv_each, y = AUC_mean, col = method)) +
@@ -272,14 +286,18 @@ AUC_single %>%
     geom_line() +
     geom_point() +
     scale_mean +
-    facet_grid(num_x_interv ~ type,
-               labeller = labeller(num_x_interv = label_num_x_interv)) +
+    facet_grid(num_x_interv + type ~ n_obs_each + problem,
+               labeller = labeller(num_x_interv = label_num_x_interv,
+                                   n_obs_each = label_obs_brief),
+               scales = 'free_x',
+               space = 'free_x') +
        labs(
            x = "Number of repetitions of each experimental setting",
            y = "Average AUC",
            title =
                "singletargets -- varying number of repetitions per environment"
        )
+
 endoffile <- dev.off()
 
 ### End of implemented
@@ -288,11 +306,75 @@ stopifnot('Done executing implemented plots' = FALSE)
 
 ##### 5 X and 5 H
 
-AUC_alltargets <- tibble(readRDS("local_results/nx5/AUC_alltargets.rds")) 
-AUC_alltargets_wide <- wide_AUC(AUC_alltargets)
+tikz(file = '~/thesis/figures/alltargets_vary_num_interv_5.tex', width=imw, height=imh)
 
-AUC_singletargets <- tibble(readRDS("local_results/nx5/AUC_singletargets.rds"))
-AUC_singletargets_wide <- wide_AUC(AUC_singletargets)
+AUC_all_5 %>% 
+    filter(shift_noise_sd == 7,
+           sd_hiddens == 5,
+           n_obs_each %in% c(2, 10)) %>% 
+    ggplot(aes(x = num_interv, y = AUC_mean, col = method)) +
+    random30_lines +
+    geom_line() +
+    geom_point(size = 0.8) +
+    facet_grid(n_obs_each + type ~ problem,
+               labeller = labeller(n_obs_each = label_obs)) +
+    scale_ICPs +
+    labs(
+        x = "Number of environments",
+        y = "Average AUC",
+        title =
+            "alltargets -- varying number of environments"
+    )
+
+endoffile <- dev.off()
+
+tikz(file = '~/thesis/figures/singletargets_z_x_y_2x_7_5.tex', width=imw, height=imh)
+
+AUC_single_5 %>% 
+    filter(shift_noise_sd == 7,
+           sd_hiddens == 5,
+           n_obs_each %in% c(2, 10),
+           num_x_interv == 5,
+           n_obs_control == n_obs_each * num_interv_each) %>% 
+    ggplot(aes(x = num_interv_each, y = AUC_mean, col = method)) +
+    random30_lines +
+    geom_line() +
+    geom_point() +
+    scale_all +
+    facet_grid(type ~ n_obs_each + problem,
+               labeller = labeller(num_x_interv = label_num_x_interv,
+                                   n_obs_each = label_obs_brief),
+               scales = 'free_x',
+               space = 'free_x') +
+       labs(
+           x = "Number of repetitions of each experimental setting",
+           y = "Average AUC",
+           title =
+               "singletargets -- varying number of repetitions per environment"
+       )
+
+endoffile <- dev.off()
+
+
+############### Unneeded
+
+## alltargets
+read_wide("local_results/nx5/AUC_alltargets.rds") %>%
+    mutate(problem = 'Problem B') %>%
+    rbind(read_wide('local_results/nx5_sep/AUC_alltargets.rds') %>%
+          mutate(problem = 'Problem A'))%>%
+    filter(method != 'randomguess') %>%
+    mutate(type = nicer_type(type)) ->
+    AUC_all_5
+
+## singletargets
+read_wide("local_results/nx5/AUC_singletargets.rds") %>%
+    mutate(problem = 'Problem B') %>%
+    rbind(read_wide('local_results/nx5_sep/AUC_singletargets.rds') %>%
+          mutate(problem = 'Problem A')) %>%
+    filter(method != 'randomguess') %>%
+    mutate(type = nicer_type(type)) ->
+    AUC_single_5
 
 ## alltargets_10_x_sdw7_sdh5
 
