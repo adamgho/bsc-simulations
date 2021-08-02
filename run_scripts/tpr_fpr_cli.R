@@ -1,3 +1,9 @@
+## A function for calculating tpr_fpr. The setting first command line argument
+## should be either 'all' or 'single' (denoting alltargets resp. singletargets),
+## and the next arguments should be the parameters for the specific setting. The
+## order_func and method_name must be provided directory to the function (not as
+## command line arguments).
+
 data_dir <- scan('run_scripts/data_dir.txt',
                  what = 'char',
                  quiet = TRUE)

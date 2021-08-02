@@ -1,3 +1,5 @@
+## Calculates AUC for the random baseline methods used in thesis.
+
 source('tools/AUC_tools.R')
 
 DAG_list <- readRDS('local_results/DAGs1000_nx30_nh30_probconnect04.rds')

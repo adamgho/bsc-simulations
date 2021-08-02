@@ -1,5 +1,8 @@
 #!/usr/bin/env Rscript
 
+## Simulates from singletargets with parameters given by the six command line
+## arguments
+
 # Command line arguments
 params <- as.numeric(commandArgs(trailingOnly = TRUE))
 

@@ -1,4 +1,8 @@
-# Saves plots
+## Used to generate plots for thesis
+
+## Note that this will not run for you, since it relies on the results being
+## saved in the exact locations that I used, and in the six different portions
+## that I split them into for practical reasons.
 
 library(tidyverse)
 theme_set(

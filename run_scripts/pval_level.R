@@ -1,3 +1,6 @@
+## Checks whether the p-values hold level.
+## They don't seem to.
+
 source('tools/methods.R')
 
 DAG_list <- readRDS('/docs/Documents/projects/bachelorprojekt/Rcode/data/nx5_local/alltargets_10_5_sdw7_sdh5/1.rds')

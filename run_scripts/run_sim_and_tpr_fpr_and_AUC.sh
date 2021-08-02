@@ -71,7 +71,6 @@ for SIMTYPE in all single; do
 		#echo PARAMS $PARAMS
 		while ! $STARTED; do
 			#echo SIMCOUNT $SIMCOUNT
-			#echo PROCESSES $(ps | grep R | wc -l)
 			#echo PROCESSES $(sh ./run_scripts/get_running_PIDs.sh | wc -l)
 			if [ $(sh ./run_scripts/get_running_PIDs.sh | wc -l) -lt $PROCMAX ]; then
 				# Runs script generating data and saves output in a .output[details] file.
