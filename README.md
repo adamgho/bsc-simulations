@@ -1,7 +1,14 @@
 # Causal discovery from interventional data
 
-This repository contains code for reproducing -- or expanding upon -- simulation
-results from my BSc thesis.
+This repository contains code used for simulations for my BSc thesis.
+
+The sections below give detailed instruction on how to use the scripts to
+simulate (and process results) from any alltargets or singletargets setting for
+both Problem A and Problem B.
+
+The files in `thesis_parameters` contain the parameters for the data included in
+plots in the thesis. Simulating using these parameters will take up over 4.5 TB
+in total.
 
 ## Prerequisites
 
@@ -14,16 +21,32 @@ I have only tested the code on GNU/Linux. I assume that it works on other
 Unix-like systems as well (e.g., macOS or FreeBSD), but am unsure whether it works on
 Windows.
 
-## Preparing for simulations
+## Quick start
+
+This will simulate data from two small alltargets settings and two small
+singletargets settings under Problem B, and process them using all methods, as a simple
+illustration of the scripts. See the section below for more detailed instruction
+on usage, to understand what happens here, and how to simulate from other
+settings.
+
+1. Create a subdirectory named `data`.
+2. Run `run_scripts/DAGs1000_nx30_nh30_probconnect04.R` to simulate random DAGs.
+3. Run `run_scripts/run_sim_and_tpr_fpr_and_AUC.sh -p 2`. This will run all
+   simulations and processing in parallel, but with a maximum of 2 processes
+   running at the same time.
+
+## Detailed explanation of use
+
+### Preparing for simulations
 
 Run `run_scripts/DAGs1000_nx30_nh30_probconnect04.R` respectively
 `DAGs1000_nx5_nh5_probconnect04.R` to simulate DAGs with 30 X and 30 H
 respectively 5 X and 5 H. Change the `saveRDS` in those files to save the DAGs
 where you wish.
 
-Create a subdirectory named for the data and set the file
-`run_tools/data_dir.txt` to contain its name (if you just call the subdirectory
-`data`, then `run_tools/data_dir.txt` already contains the right name).
+Create a subdirectory for the data and set the file `run_tools/data_dir.txt` to
+contain its name (if you just call the subdirectory `data`, then
+`run_tools/data_dir.txt` already contains the right name).
 
 If you want to simulate from the Problem A setting, then set the content of
 `run_tools/data_tools_file.txt` to be `tools/separate_data_tools.R` (i.e., run
@@ -51,7 +74,7 @@ Go to `run_scripts/alltargets_sim.txt` respectively
 contain the indices of the DAGs you wish to simulate from, and set the
 `DAGs_filename` to contain the file containing the list of DAGs.
 
-## Running simulations and analyzing the data
+### Running simulations and analyzing the data
 
 Run `run_scripts/run_sim_and_tpr_fpr_and_AUC.sh -p k` where `k` should be the
 number of parallel processes you want to allow. This will simulate data, apply
@@ -61,7 +84,7 @@ done, and add the corresponding analysis of the data to the queue at the
 appropriate time.
 
 If you have to stop the simulations again and want to continue at a later time,
-then juct use `Ctrl-C` to stop them, and run the command
+then just use `Ctrl-C` to stop them, and run the command
 `run_scripts/run_sim_and_tpr_fpr_and_AUC.sh -p k` again when you are ready to
 start them again. When simulating data, the simulated data sets are saved
 in files of approximately 500 MB, and the simulation will automatically pick up
@@ -71,7 +94,10 @@ While a simulation is running, you may wish to check which processes are
 currently running to get an idea of how far it has come. To do this, just run
 `run_scripts/cont_list_running.sh` in another terminal.
 
-## Other scripts for the thesis
+You can run `run_scripts/add_AUC.sh` to process the tpr_fpr files if you stop
+the simulation script before it finishes and would like to see the results so far.
+
+## Other scripts
 
 The script `run_scripts/random_AUC.R` calculates the mean and quartiles of the
 random baseline methods. You must supply a list of DAGs for it; see the source code.
@@ -82,8 +108,6 @@ amount of simulation (over 4.5 TB of data in total) I split them up in six
 separate portions, named stor1, ..., stor6, stored in subdirectories of a
 directory I named local_results. The figures are saved as tikz-code in tex-files
 in the directory `~/thesis/figures/`.
-
-### Not included in the thesis
 
 `pval_level.R` is a rough sketch for checking the levels of the p-values -- it
 indicates that they don't hold level, but this was not explicitly included in
@@ -115,6 +139,6 @@ AUC.
 - `methods.R` for getting parameter estimates and p-values from the different methods.
 - `AUC_tools.R` for calculating area under the curve for the methods on simulated data.
 
-### `LICENCE.md`
+### `LICENSE.md`
 
 Contains license terms.

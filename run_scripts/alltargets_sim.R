@@ -3,11 +3,12 @@
 ## Command line arguments
 params <- as.numeric(commandArgs(trailingOnly = TRUE))
 
-## Indices of DAGs to simulate from
-DAGs_to_sim <- 1:100
-## DAGs_filename <- "data/DAGs1000_nx30_nh30_probconnect04.rds"
-DAGs_filename <- "data/DAGs1000_nx5_nh5_probconnect04.rds" 
-## DAGs_filename <- "data/exampleDAG1.rds"
+## Filename of DAGs to simulate from
+DAGs_filename <- "data/DAGs1000_nx30_nh30_probconnect04.rds"
+##DAGs_filename <- "data/DAGs1000_nx5_nh5_probconnect04.rds" 
+
+## Indices of DAGs in the list to simulate from
+DAGs_to_sim <- 1:1000
 
 ## directory to save files in
 dir <- scan('run_scripts/data_dir.txt',
