@@ -48,9 +48,10 @@ nicer_type <- function(type) {
     ifelse(type == 'anc', 'Ancestors', 'Parents')
 }
 
-## Reads randomguess performance
+####### 30 X and 30 H
 
-read.table('local_results/nx30_AUC_random_summary.txt',
+## Reads randomguess performance
+read.table('local_results/all_random_AUC_summary.txt',
            header = TRUE) %>%
     pivot_longer(cols = everything(),
                  names_to = c('type', 'measure'),
@@ -94,12 +95,21 @@ random_lines <- list(
                    lty = 'random-after-parents')),
     geom_ribbon(aes(ymin = rp_AUC_quartile1,
                     ymax = rp_AUC_quartile3,
+                    ## Hack to get it to only use x-values once. Otherwise the
+                    ## x-values for each method would add another layer of fill,
+                    ## meaning that the alpha would effectively depend on the
+                    ## number of methods, and thus differ between the different
+                    ## plots (since some plots also conain, e.g., ICP and PICP).
+                    ## The solution is to only add fill for the x-values
+                    ## corresponding to OLS-coef, since this method is included
+                    ## in all plots.
                     alpha = ifelse(method == 'OLS-coef',
                                    'a',
                                    'b')),
                 lty = 0),
     geom_ribbon(aes(ymin = r_AUC_quartile1,
                     ymax = r_AUC_quartile3,
+                    ## See explanation above
                     alpha = ifelse(method == 'OLS-coef',
                                    'a',
                                    'b')),
@@ -111,8 +121,6 @@ random_lines <- list(
                        guide = 'none'),
     guides(colour = guide_legend(override.aes = list(fill = 0.01)))
 )
-
-####### 30 X and 30 H
 
 ## alltargets AUC (permuted - Problem B)
 stor1_all <- read_wide('local_results/stor1/AUC_alltargets.rds')
@@ -139,10 +147,12 @@ stor1_single <- read_wide('local_results/stor1/AUC_singletargets.rds')
 stor2_single <- read_wide('local_results/stor2/AUC_singletargets.rds')
 ## separate (Problem A)
 stor5_single <- read_wide('local_results/stor5/AUC_singletargets.rds')
+stor6_single <- read_wide('local_results/stor6/AUC_singletargets.rds')
 
 rbind(stor1_single, stor2_single) %>%
     mutate(problem = 'Problem B') %>%
-    rbind(mutate(stor5_single, problem = 'Problem A')) %>%
+    rbind(mutate(rbind(stor5_single, stor6_single),
+                 problem = 'Problem A')) %>%
     filter(method != 'randomguess') %>%
     mutate(type = nicer_type(type)) ->
     AUC_single
@@ -150,7 +160,9 @@ rbind(stor1_single, stor2_single) %>%
 ## Color scales: Have to set colors manually - otherwise the methods get
 ## different colors in different plots (since there is a varying number of
 ## methods in the plots).
-## Some of the colors are from TODO: insert link to modus gitlab.
+## Some of the colors (specifically '#44bc44', '#2fafff', '#ff8059', '#feacd0',
+## and '#b6a0ff') are from the Modus Themes by Protesilaos Stavrou (GNU GPLv3
+## licensed, see https://protesilaos.com/modus-themes/).
 
 main_methods <- c('OLS-coef', 'OLS-pvals',
                   'POLS-coef', 'POLS-pvals',
@@ -177,26 +189,26 @@ ICPs <- c('ICP', 'PICP')
 col_ICPs <- c('#feacd0', '#b6a0ff')
 
 scale_ICPs <- scale_color_manual(
-    breaks = c(main_methods, ICPs, 'random'),
+    breaks = c(main_methods, ICPs, 'all-random'),
     values = c(col_main_methods, col_ICPs, '#000000'))
 
 scale_all <- scale_color_manual(
-    breaks = c(main_methods, ICPs, mean_shift, 'random'),
+    breaks = c(main_methods, ICPs, mean_shift, 'all-random'),
     values = c(col_main_methods, col_ICPs, col_mean_shift, '#000000'))
 
 ##### 30 X and 30 H
 
+## Used to label n_obs_each in facet_grid
 label_obs <- function(n_obs_each) {
     sprintf('$\\mathtt{no} = %s$', n_obs_each)
 }
 
+## Collect AUC for methods and random baselines
 AUC_all <- left_join(AUC_all, random_collected, by = 'type') %>%
     mutate(is_OLS_coef = method == 'OLS-coef')
 AUC_single <- left_join(AUC_single, random_collected, by = 'type')
 
 tikz(file = '~/thesis/figures/alltargets_vary_num_interv.tex', width=imw, height=imh)
-
-
 
 AUC_all %>% 
     filter(shift_noise_sd == 7,
@@ -244,12 +256,12 @@ AUC_all %>%
     facet_grid(n_obs_each + type ~ problem,
                labeller = labeller(n_obs_each = label_obs)) +
     scale_main +
-    labs(
-        x = "$\\texttt{ne}$",
-        y = "Average AUC",
-        title = "Median (dotted), and 1st and 3rd quartiles (dashed) of coef methods compared.",
-        subtitle = "alltargets; $\\mathtt{sdw} = 7, \\mathtt{sdh} = 5$."
-    )
+    labs(x = "$\\texttt{ne}$", y = "Average AUC",
+         title = "Comparing quartiles for previous plot.",
+         subtitle = "Median (dotted), 1st and 3rd quartile (dashed).") +
+    scale_fill_manual(guide = 'none',
+                      breaks = main_methods,
+                      values = col_main_methods)
 
 endoffile <- dev.off()
 
@@ -281,9 +293,10 @@ endoffile <- dev.off()
 tikz(file = '~/thesis/figures/alltargets_5000obs.tex', width=imw, height=imh)
 
     
-## There are a couple of points here, where I ran two differen simulations over
+## There are a couple of points here, where I ran two different simulations over
 ## 1000 DAGs, so I first take the average of these two averages, to not get
-## multiple points with the same x-coordinate.
+## multiple points with the same x-coordinate (which would give saw-tooth jumps
+## in the plot)
 
 AUC_all %>% 
     filter(shift_noise_sd == 7,
@@ -297,7 +310,7 @@ AUC_all %>%
              type,
              problem) %>%
     summarise(AUC_mean = mean(AUC_mean)) %>%
-    left_join(random_collected, by = 'type') %>%
+    left_join(random_collected, by = 'type') %>% # random was dropped at summarise
     ggplot(aes(x = log(num_interv / n_obs_each), y = AUC_mean, col = method)) +
     random_lines +
     geom_line() +
@@ -429,9 +442,8 @@ read_wide("local_results/nx5/AUC_singletargets.rds") %>%
     mutate(type = nicer_type(type)) ->
     AUC_single_5
     
-## alltargets
-
-read.table('local_results/nx5_AUC_random_summary.txt',
+## random
+read.table('local_results/nx5_all_random_AUC_summary.txt',
            header = TRUE) %>%
     pivot_longer(cols = everything(),
                  names_to = c('type', 'measure'),
@@ -445,8 +457,11 @@ read.table('local_results/nx5_AUC_random_summary.txt',
 
 colnames(random5)[2:5] <- paste('r', colnames(random5)[2:5], sep = '_')
 
+## join AUC for methods and random
 AUC_all_5 <- left_join(AUC_all_5, random5, by = 'type')
 AUC_single_5 <- left_join(AUC_single_5, random5, by = 'type')
+
+## alltargets plot
 
 tikz(file = '~/thesis/figures/alltargets_vary_num_interv_nx5.tex', width=imw, height=imh)
 
@@ -455,7 +470,8 @@ AUC_all_5 %>%
            sd_hiddens == 5,
            n_obs_each %in% c(2, 10)) %>% 
     ggplot(aes(x = num_interv, y = AUC_mean, col = method)) +
-    geom_hline(aes(yintercept = r_AUC_mean, col = 'random')) +
+    geom_hline(aes(yintercept = r_AUC_mean, col = 'all-random'),
+               lty = 2) +
     geom_line() +
     geom_point(size = 0.8) +
     facet_grid(n_obs_each + type ~ problem,
@@ -468,11 +484,12 @@ AUC_all_5 %>%
             "Varying number of environments.",
         subtitle =
             'alltargets; $\\mathtt{sdw} = 7, \\mathtt{sdh} = 5$.'
-    )
+    ) +
+    coord_cartesian(ylim = c(0.68, NA))
 
 endoffile <- dev.off()
 
-## singletargets
+## singletargets plot
 
 tikz(file = '~/thesis/figures/singletargets_z_x_y_zx_7_5_nx5.tex', width=imw, height=imh)
 
@@ -483,7 +500,8 @@ AUC_single_5 %>%
            num_x_interv == 5,
            n_obs_control == n_obs_each * num_interv_each) %>% 
     ggplot(aes(x = num_interv_each, y = AUC_mean, col = method)) +
-    geom_hline(aes(yintercept = r_AUC_mean, col = 'random')) +    
+    geom_hline(aes(yintercept = r_AUC_mean, col = 'all-random'),
+               lty = 2) +    
     geom_line() +
     geom_point() +
     scale_all +
@@ -499,6 +517,7 @@ AUC_single_5 %>%
                "Varying number of observations per environment.",
            subtitle =
                'alltargets; $\\mathtt{nxi} = 5, \\mathtt{noc} = \\mathtt{no}\\cdot \\mathtt{nei}, \\mathtt{sdw} = 7, \\mathtt{sdh} = 5$.'
-       )
+       ) +
+    coord_cartesian(ylim = c(0.68, NA))
 
 endoffile <- dev.off()
