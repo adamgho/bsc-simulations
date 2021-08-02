@@ -249,6 +249,7 @@ AUC_all %>%
                          'POLS-coef',
                          'DPOLS-coef')) %>% 
     ggplot(aes(x = num_interv, y = AUC_mean, col = method)) +
+    random_lines + 
     geom_line() +
     geom_line(aes(y = AUC_median), lty = 'dotted') +
     geom_ribbon(aes(ymin = AUC_quartile1,
@@ -265,7 +266,8 @@ AUC_all %>%
          subtitle = "Median (dotted), 1st and 3rd quartile (dashed).") +
     scale_fill_manual(guide = 'none',
                       breaks = main_methods,
-                      values = col_main_methods)
+                      values = col_main_methods) +
+    coord_cartesian(ylim = c(0.5, NA))
 
 endoffile <- dev.off()
 
