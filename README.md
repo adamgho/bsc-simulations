@@ -36,6 +36,8 @@ other settings.
 3. Run `./run_scripts/run_sim_and_tpr_fpr_and_AUC.sh -p 4`. This will run all
    simulations and processing in parallel, but with a maximum of 4 processes
    running at the same time.
+   
+It will likely take about 30 minutes to run.
 
 ## Detailed explanation of use
 
