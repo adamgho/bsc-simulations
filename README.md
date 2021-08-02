@@ -29,10 +29,11 @@ simple illustration of the scripts. See the section below for more detailed
 instruction on usage, to understand what happens here, and how to simulate from
 other settings.
 
-1. Create directories `data` and `run_scripts/.output`.
+1. Create directories `data` and `run_scripts/.output` (i.e., run `mkdir data`
+   and `mkdir run_scripts/.output`).
 2. Run `Rscript run_scripts/DAGs1000_nx30_nh30_probconnect04.R` to simulate 1000
    random DAGs.
-3. Run `run_scripts/run_sim_and_tpr_fpr_and_AUC.sh -p 4`. This will run all
+3. Run `./run_scripts/run_sim_and_tpr_fpr_and_AUC.sh -p 4`. This will run all
    simulations and processing in parallel, but with a maximum of 4 processes
    running at the same time.
 
@@ -80,7 +81,7 @@ contain the indices of the DAGs you wish to simulate from, and set the
 
 ### Running simulations and analyzing the data
 
-Run `run_scripts/run_sim_and_tpr_fpr_and_AUC.sh -p k` where `k` should be the
+Run `./run_scripts/run_sim_and_tpr_fpr_and_AUC.sh -p k` where `k` should be the
 number of parallel processes you want to allow. This will simulate data, apply
 the methods to the data, and process the results to calculate AUC. Nothing more
 is needed! The script automatically keeps track of when the simulations are
@@ -91,14 +92,14 @@ appropriate time.
 
 If you have to stop the simulations again and want to continue at a later time,
 then just use `Ctrl-C` to stop them, and run the command
-`run_scripts/run_sim_and_tpr_fpr_and_AUC.sh -p k` again when you are ready to
+`./run_scripts/run_sim_and_tpr_fpr_and_AUC.sh -p k` again when you are ready to
 start them again. When simulating data, the simulated data sets are saved
 in files of approximately 500 MB, and the simulation will automatically pick up
 from where it left off when you restart the script.
 
 While a simulation is running, you may wish to check which processes are
 currently running to get an idea of how far it has come. To do this, just run
-`run_scripts/cont_list_running.sh` in another terminal.
+`./run_scripts/cont_list_running.sh` in another terminal.
 
 Another way to monitor simulations is through the files in
 `run_scripts/.output`. You can, e.g., run `tail -f
@@ -108,7 +109,7 @@ running simulation in the singletargets setting with parameters (10, 10, 30,
 `run_scripts/run_sim_and_tpr_fpr_and_AUC.sh` to see the naming conventions of
 files in `run_scripts/.output`.
 
-You can run `run_scripts/add_AUC.sh` to process the tpr_fpr files if you stop
+You can run `./run_scripts/add_AUC.sh` to process the tpr_fpr files if you stop
 the simulation script before it finishes and would like to see the results so
 far.
 
@@ -121,7 +122,7 @@ you want to run them on more DAGs.
 
 Sometimes `run_scripts/run_sim_and_tpr_fpr_and_AUC.sh` fails to add the AUC
 files after finishing the simulations and data processing. If this happens, then
-run `run_scripts/add_AUC.sh`. This will add all AUC files, and should run in
+run `./run_scripts/add_AUC.sh`. This will add all AUC files, and should run in
 less than a minute.
 
 ## Other scripts
