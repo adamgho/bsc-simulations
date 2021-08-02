@@ -24,15 +24,16 @@ Windows.
 ## Quick start
 
 This will simulate data from two small alltargets settings and two small
-singletargets settings under Problem B, and process them using all methods, as a simple
-illustration of the scripts. See the section below for more detailed instruction
-on usage, to understand what happens here, and how to simulate from other
-settings.
+singletargets settings under Problem B, and process them using all methods, as a
+simple illustration of the scripts. See the section below for more detailed
+instruction on usage, to understand what happens here, and how to simulate from
+other settings.
 
-1. Create a subdirectory named `data`.
-2. Run `Rscript run_scripts/DAGs1000_nx30_nh30_probconnect04.R` to simulate random DAGs.
-3. Run `run_scripts/run_sim_and_tpr_fpr_and_AUC.sh -p 2`. This will run all
-   simulations and processing in parallel, but with a maximum of 2 processes
+1. Create directories `data` and `run_scripts/.output`.
+2. Run `Rscript run_scripts/DAGs1000_nx30_nh30_probconnect04.R` to simulate 1000
+   random DAGs.
+3. Run `run_scripts/run_sim_and_tpr_fpr_and_AUC.sh -p 4`. This will run all
+   simulations and processing in parallel, but with a maximum of 4 processes
    running at the same time.
 
 ## Detailed explanation of use
@@ -47,6 +48,9 @@ where you wish.
 Create a subdirectory for the data and set the file `run_tools/data_dir.txt` to
 contain its name (if you just call the subdirectory `data`, then
 `run_tools/data_dir.txt` already contains the right name).
+
+You must create a directory `run_scripts/.output`. This will contain messages
+from the simulations, so you can track how far they have come.
 
 If you want to simulate from the Problem A setting, then set the content of
 `run_tools/data_tools_file.txt` to be `tools/separate_data_tools.R` (i.e., run
@@ -83,6 +87,8 @@ is needed! The script automatically keeps track of when the simulations are
 done, and add the corresponding analysis of the data to the queue at the
 appropriate time.
 
+### Tips and tricks
+
 If you have to stop the simulations again and want to continue at a later time,
 then just use `Ctrl-C` to stop them, and run the command
 `run_scripts/run_sim_and_tpr_fpr_and_AUC.sh -p k` again when you are ready to
@@ -94,12 +100,29 @@ While a simulation is running, you may wish to check which processes are
 currently running to get an idea of how far it has come. To do this, just run
 `run_scripts/cont_list_running.sh` in another terminal.
 
+Another way to monitor simulations is through the files in
+`run_scripts/.output`. You can, e.g., run `tail -f
+run_scripts/.output/singletargets_10_10_30_100_7_5.txt` to monitor the currently
+running simulation in the singletargets setting with parameters (10, 10, 30,
+100, 7, 5). You can read the source code of
+`run_scripts/run_sim_and_tpr_fpr_and_AUC.sh` to see the naming conventions of
+files in `run_scripts/.output`.
+
 You can run `run_scripts/add_AUC.sh` to process the tpr_fpr files if you stop
 the simulation script before it finishes and would like to see the results so
 far.
 
-Note: By default ICP and PICP is only run on 10 DAGs, no matter how many you
-have simulated, since they are quite slow.
+By default ICP and PICP is only run on 10 DAGs, no matter how many you have
+simulated, since they are quite slow. Change this in
+`run_scripts/tpr_fpr_methods/ICP.R` and `run_scripts/tpr_fpr_methods/PICP.R` if
+you want to run them on more DAGs.
+
+### Troubleshooting
+
+Sometimes `run_scripts/run_sim_and_tpr_fpr_and_AUC.sh` fails to add the AUC
+files after finishing the simulations and data processing. If this happens, then
+run `run_scripts/add_AUC.sh`. This will add all AUC files, and should run in
+less than a minute.
 
 ## Other scripts
 
@@ -107,8 +130,9 @@ The script `run_scripts/random_AUC.R` calculates the mean and quartiles of the
 random baseline methods. You must supply a list of DAGs; see the source code.
 
 The script `run_scripts/generate_plots.R` was used to generate the plots. This
-must be adapted based on where you save simulation results, and in how many
-different portions.
+is not runnable as is, since it depends heavily on the way I split the simulations
+into portions, and where I saved them, but the source code can easily be adapted
+based on where you save your simulation results.
 
 `pval_level.R` is a rough sketch for checking the levels of the p-values -- it
 indicates that they don't hold level, but this was not explicitly included in
