@@ -5,4 +5,4 @@ install.packages("Matrix")
 install.packages("tidyverse")
 install.packages("igraph")
 install.packages("InvariantCausalPrediction")
-
+install.packages("tikzDevice")

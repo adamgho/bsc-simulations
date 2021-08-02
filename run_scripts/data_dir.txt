@@ -1,1 +1,1 @@
-data/sep_nx5_local/
+data/

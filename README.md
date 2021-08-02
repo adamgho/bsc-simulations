@@ -1,8 +1,31 @@
 # Causal discovery from interventional data
 
-OBS: The information in README is outdated. There are also many files in the repository that will soon be removed (because they are not used).
+This repository contains code for reproducing -- or expanding upon -- simulation
+results from my BSc thesis.
 
-This repository contains code for reproducing -- or expanding upon -- simulation results from my BSc thesis.
+## Prerequisites
+
+You must have `R` and `bash` installed. Every script has to be run while
+standing in the root of the repository.
+
+Run `Rscript run_scripts/install_packages.R` to install the necessary R packages.
+
+I have only tested the code on GNU/Linux. I assume that it works on other
+Unix-like systems as well (e.g., macOS or FreeBSD), but am unsure whether it works on
+Windows.
+
+## Preparing for simulations
+
+Create a subdirectory for the data and set the file `run_tools/data_dir.txt` to contain
+its name (if you just call the subdirectory `data`, then
+`run_tools/data_dir.txt` already contains the right name).
+
+If you want to simulate from the Problem A setting, then set the content of
+`run_tools/data_tools_file.txt` to be `tools/separate_data_tools.R` (i.e., run
+`echo 'tools/separate_data_tools.R' > run_tools/data_tools_file.txt`), or if you
+want to simulate form the Problem B setting, then set the content of
+`data_tools_file.txt` to be `tools/data_tools.R` (i.e., run `echo
+'rools/data_tools.R > run_tools/data_tools_file.txt`).
 
 ## Prerequisites
 
