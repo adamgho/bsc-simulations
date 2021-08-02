@@ -30,7 +30,7 @@ on usage, to understand what happens here, and how to simulate from other
 settings.
 
 1. Create a subdirectory named `data`.
-2. Run `run_scripts/DAGs1000_nx30_nh30_probconnect04.R` to simulate random DAGs.
+2. Run `Rscript run_scripts/DAGs1000_nx30_nh30_probconnect04.R` to simulate random DAGs.
 3. Run `run_scripts/run_sim_and_tpr_fpr_and_AUC.sh -p 2`. This will run all
    simulations and processing in parallel, but with a maximum of 2 processes
    running at the same time.
@@ -95,19 +95,20 @@ currently running to get an idea of how far it has come. To do this, just run
 `run_scripts/cont_list_running.sh` in another terminal.
 
 You can run `run_scripts/add_AUC.sh` to process the tpr_fpr files if you stop
-the simulation script before it finishes and would like to see the results so far.
+the simulation script before it finishes and would like to see the results so
+far.
+
+Note: By default ICP and PICP is only run on 10 DAGs, no matter how many you
+have simulated, since they are quite slow.
 
 ## Other scripts
 
 The script `run_scripts/random_AUC.R` calculates the mean and quartiles of the
-random baseline methods. You must supply a list of DAGs for it; see the source code.
+random baseline methods. You must supply a list of DAGs; see the source code.
 
-The script `run_scripts/generate_plots.R` was used to generate the plots. You
-will not be able to run this without modifying it yourself. Due to the large
-amount of simulation (over 4.5 TB of data in total) I split them up in six
-separate portions, named stor1, ..., stor6, stored in subdirectories of a
-directory I named local_results. The figures are saved as tikz-code in tex-files
-in the directory `~/thesis/figures/`.
+The script `run_scripts/generate_plots.R` was used to generate the plots. This
+must be adapted based on where you save simulation results, and in how many
+different portions.
 
 `pval_level.R` is a rough sketch for checking the levels of the p-values -- it
 indicates that they don't hold level, but this was not explicitly included in
