@@ -256,12 +256,6 @@ one_minus <- function(pval_func) {
     function(dat) 1 - pval_func(dat)
 }
 
-## Function taking dat and returning a random permutation of 1:nx where nx is
-## the number of X's this will result in random guessing.
-randomguess <- function(dat) {
-    sample(1:ncol(dat$X))
-}
-
 # Runs save_tpr_fpr on all data-directories in dir that don't already
 # have a file named tpr_fpr_"method_name".rds
 add_missing_tpr_fpr <- function(order_func, method_name,
