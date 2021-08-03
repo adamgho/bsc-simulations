@@ -522,7 +522,7 @@ AUC_single_5 %>%
            title =
                "Varying number of observations per environment.",
            subtitle =
-               'alltargets; $\\mathtt{nxi} = 5, \\mathtt{noc} = \\mathtt{no}\\cdot \\mathtt{nei}, \\mathtt{sdw} = 7, \\mathtt{sdh} = 5$.'
+               'singletargets; $\\mathtt{nxi} = 5, \\mathtt{noc} = \\mathtt{no}\\cdot \\mathtt{nei}, \\mathtt{sdw} = 7, \\mathtt{sdh} = 5$.'
        ) +
     coord_cartesian(ylim = c(0.68, NA))
 
