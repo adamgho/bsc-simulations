@@ -138,9 +138,9 @@ stor6_all <- read_wide('local_results/stor6/AUC_alltargets.rds')
 ## Collect and add problem column describing whether the data is from separate
 ## experiments (Problem A) or permuted (Problem B).
 rbind(stor1_all, stor2_all, stor4_all) %>%
-    mutate(problem = 'Setting B') %>%
+    mutate(problem = 'Permuted') %>%
     rbind(rbind(stor3_all, stor5_all, stor6_all) %>%
-          mutate(problem = 'Setting A')) %>%
+          mutate(problem = 'Truly separate')) %>%
     filter(method != 'randomguess') %>%
     mutate(type = nicer_type(type)) ->
     AUC_all
@@ -154,9 +154,9 @@ stor5_single <- read_wide('local_results/stor5/AUC_singletargets.rds')
 stor6_single <- read_wide('local_results/stor6/AUC_singletargets.rds')
 
 rbind(stor1_single, stor2_single) %>%
-    mutate(problem = 'Setting B') %>%
+    mutate(problem = 'Permuted') %>%
     rbind(mutate(rbind(stor5_single, stor6_single),
-                 problem = 'Setting A')) %>%
+                 problem = 'Truly separate')) %>%
     filter(method != 'randomguess') %>%
     mutate(type = nicer_type(type)) ->
     AUC_single
@@ -226,7 +226,7 @@ AUC_all %>%
                labeller = labeller(n_obs_each = label_obs)) +
     scale_main +
     labs(
-        x = "$\\texttt{ne}$",
+        x = "\\texttt{ne} (number of environments)",
         y = "Average AUC",
         title = "Varying number of environments.",
         subtitle = "alltargets; $\\mathtt{sdw} = 7, \\mathtt{sdh} = 5$.",
@@ -261,9 +261,9 @@ AUC_all %>%
     facet_grid(n_obs_each + type ~ problem,
                labeller = labeller(n_obs_each = label_obs)) +
     scale_main +
-    labs(x = "$\\texttt{ne}$", y = "Average AUC",
-         title = "Comparing quartiles for previous plot.",
-         subtitle = "Median (dotted), 1st and 3rd quartile (dashed).") +
+    labs(x = "\\texttt{ne} (number of environments)", y = "AUC",
+         title = "Varying number of environments; comparing quartiles",
+         subtitle = "Median (dotted), 1st and 3rd quartile (dashed), and average (solid).") +
     scale_fill_manual(guide = 'none',
                       breaks = main_methods,
                       values = col_main_methods) +
@@ -285,7 +285,7 @@ AUC_all %>%
     facet_grid(type ~ problem) +
     scale_main +
     labs(
-        x = "\\texttt{no}",
+        x = "\\texttt{no} (number of observations per environment)",
         y = "Average AUC",
         title =
             "Varying number of observations per environment.",
@@ -324,7 +324,7 @@ AUC_all %>%
     scale_main +
     facet_grid(type ~ problem) +
        labs(
-           x = "$\\log \\frac{\\mathtt{ne}}{\\mathtt{no}}$",
+           x = "$\\log \\frac{\\mathtt{ne}\\mathrm{\\ (number\\ of\\ environments)}}{\\mathtt{no}\\mathrm{\\ (number\\ of\\ observations\\ per\\ environment)}}$",
            y = "Average AUC",
            title =
                "Few env. with many obs. vs. many env. with few obs.",
@@ -356,7 +356,7 @@ AUC_all %>%
     facet_grid(n_obs_each + type ~ problem,
                labeller = labeller(n_obs_each = label_obs_extra)) +
        labs(
-           x = "\\texttt{sdw}",
+           x = "\\texttt{sdw} (standard deviation of mean shifts)",
            y = "Average AUC",
            title =
                "Varying standard deviation of mean shifts $W$.",
@@ -380,7 +380,7 @@ AUC_all %>%
     facet_grid(n_obs_each + type ~ problem,
                labeller = labeller(n_obs_each = label_obs_extra)) +
        labs(
-           x = "\\texttt{sdh}",
+           x = "\\texttt{sdh} (standard deviation of hidden variables)",
            y = "Average AUC",
            title =
                "Varying standard deviation of hidden variables.",
@@ -418,7 +418,7 @@ AUC_single %>%
                labeller = labeller(num_x_interv = label_num_x_interv,
                                    n_obs_each = label_obs)) +
        labs(
-           x = "\\texttt{no}",
+           x = "\\texttt{no} (number of observations per environment)",
            y = "Average AUC",
            title =
                "Varying number of observations per environment.",
@@ -432,18 +432,18 @@ endoffile <- dev.off()
 
 ## alltargets
 read_wide("local_results/nx5/AUC_alltargets.rds") %>%
-    mutate(problem = 'Setting B') %>%
+    mutate(problem = 'Permuted') %>%
     rbind(read_wide('local_results/nx5_sep/AUC_alltargets.rds') %>%
-          mutate(problem = 'Setting A')) %>%
+          mutate(problem = 'Truly separate')) %>%
     filter(method != 'randomguess') %>%
     mutate(type = nicer_type(type)) ->
     AUC_all_5
 
 ## singletargets
 read_wide("local_results/nx5/AUC_singletargets.rds") %>%
-    mutate(problem = 'Setting B') %>%
+    mutate(problem = 'Permuted') %>%
     rbind(read_wide('local_results/nx5_sep/AUC_singletargets.rds') %>%
-          mutate(problem = 'Setting A')) %>%
+          mutate(problem = 'Truly separate')) %>%
     filter(method != 'randomguess') %>%
     mutate(type = nicer_type(type)) ->
     AUC_single_5
@@ -484,7 +484,7 @@ AUC_all_5 %>%
                labeller = labeller(n_obs_each = label_obs)) +
     scale_ICPs +
     labs(
-        x = "\\texttt{ne}",
+        x = "\\texttt{ne} (number of environments)",
         y = "Average AUC",
         title =
             "Varying number of environments.",
@@ -517,7 +517,7 @@ AUC_single_5 %>%
                scales = 'free_x',
                space = 'free_x') +
        labs(
-           x = "\\texttt{no}",
+           x = "\\texttt{no} (number of environments)",
            y = "Average AUC",
            title =
                "Varying number of observations per environment.",
