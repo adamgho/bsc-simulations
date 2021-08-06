@@ -3,8 +3,8 @@
 This repository contains code used for simulations for my BSc thesis.
 
 The sections below give detailed instruction on how to use the scripts to
-simulate (and process results) from any alltargets or singletargets setting for
-both Problem A and Problem B.
+simulate (and process results) from any alltargets or singletargets setting
+using either truly separate data or permuted separate data.
 
 The files in `thesis_parameters` contain the parameters for the data included in
 plots in the thesis. Simulating using these parameters will take up over 4.5 TB
@@ -23,8 +23,8 @@ Windows.
 
 ## Quick start
 
-This will simulate data from two small alltargets settings and two small
-singletargets settings under Problem B, and process them using all methods, as a
+This will simulate permuted separate data from two small alltargets settings and
+two small singletargets settings, and process the data using all methods, as a
 simple illustration of the scripts. See the section below for more detailed
 instruction on usage, to understand what happens here, and how to simulate from
 other settings.
@@ -55,10 +55,10 @@ contain its name (if you just call the subdirectory `data`, then
 You must create a directory `run_scripts/.output`. This will contain messages
 from the simulations, so you can track how far they have come.
 
-If you want to simulate from the Problem A setting, then set the content of
+If you want to simulate truly separate data, then set the content of
 `run_tools/data_tools_file.txt` to be `tools/separate_data_tools.R` (i.e., run
 `echo 'tools/separate_data_tools.R' > run_tools/data_tools_file.txt`), or if you
-want to simulate form the Problem B setting, then set the content of
+want to simulate permuted separate data, then set the content of
 `data_tools_file.txt` to be `tools/data_tools.R` (i.e., run `echo
 'rools/data_tools.R > run_tools/data_tools_file.txt`).
 
@@ -160,10 +160,8 @@ AUC.
 `tools` contains the main tools for simulating random SCMs, data from them, and running the methods.
 
 - `DAG_tools.R` for simulating random DAGs.
-- `separate_data_tools.R` for simulating random linear Gaussian SCMs and data
-  from them in the Problem A setup.
-- `data_tools.R` for simulating random linear Gaussian SCMs and data from them
-  in the Problem B setup.
+- `separate_data_tools.R` for simulating truly separate data.
+- `data_tools.R` for simulating permuted separate data.
 - `methods.R` for getting parameter estimates and p-values from the different methods.
 - `AUC_tools.R` for calculating area under the curve for the methods on simulated data.
 
