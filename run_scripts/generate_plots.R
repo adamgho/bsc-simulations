@@ -225,12 +225,9 @@ AUC_all %>%
     facet_grid(n_obs_each + type ~ problem,
                labeller = labeller(n_obs_each = label_obs)) +
     scale_main +
-    labs(
-        x = "\\texttt{ne} (number of environments)",
-        y = "Average AUC",
-        title = "Varying number of environments.",
-        subtitle = "alltargets; $\\mathtt{sdw} = 7, \\mathtt{sdh} = 5$.",
-    ) +
+    labs(x = "\\texttt{ne} (number of environments)", y = "Average AUC",
+         title = "Varying number of environments.",
+         subtitle = "alltargets; $\\mathtt{sdw} = 7, \\mathtt{sdh} = 5$; 30 $X$'s and 30 $H$'s.",) +
     coord_cartesian(ylim = c(0.5, NA))
 
 endoffile <- dev.off()
@@ -262,7 +259,7 @@ AUC_all %>%
                labeller = labeller(n_obs_each = label_obs)) +
     scale_main +
     labs(x = "\\texttt{ne} (number of environments)", y = "AUC",
-         title = "Varying number of environments; comparing quartiles",
+         title = "Comparing quartiles in Figure \\ref{fig:vary-ne} setting.",
          subtitle = "Median (dotted), 1st and 3rd quartile (dashed), and average (solid).") +
     scale_fill_manual(guide = 'none',
                       breaks = main_methods,
@@ -290,7 +287,7 @@ AUC_all %>%
         title =
             "Varying number of observations per environment.",
         subtitle =
-            "alltargets; $\\mathtt{ne} = 500, \\mathtt{sdw} = 7, \\mathtt{sdh} = 5$."
+            "alltargets; $\\mathtt{ne} = 500, \\mathtt{sdw} = 7, \\mathtt{sdh} = 5$; 30 $X$'s and 30 $H$'s."
     ) +
     coord_cartesian(ylim = c(0.5, NA))
 
@@ -329,7 +326,7 @@ AUC_all %>%
            title =
                "Few env. with many obs. vs. many env. with few obs.",
            subtitle =
-               'alltargets; $\\mathtt{no}\\cdot\\mathtt{ne} = 5000, \\mathtt{sdw} = 7, \\mathtt{sdh} = 5$.'
+               "alltargets; $\\mathtt{no}\\cdot\\mathtt{ne} = 5000, \\mathtt{sdw} = 7, \\mathtt{sdh} = 5$; 30 $X$'s and 30 $H$'s."
        ) +
     coord_cartesian(ylim = c(0.5, NA))
 
@@ -385,7 +382,7 @@ AUC_all %>%
            title =
                "Varying standard deviation of hidden variables.",
            subtitle =
-               'alltargets; $\\mathtt{sdw} = 7$.'
+               "alltargets; $\\mathtt{sdw} = 7$; 30 $X$'s and 30 $H$'s"
        )
 
 endoffile <- dev.off()
@@ -423,7 +420,7 @@ AUC_single %>%
            title =
                "Varying number of observations per environment.",
            subtitle =
-               'singletargets; $\\mathtt{noc} = \\mathtt{no}\\cdot \\mathtt{nei}, \\mathtt{sdw} = 7, \\mathtt{sdh} = 5$.'
+               "singletargets; $\\mathtt{noc} = \\mathtt{no}\\cdot \\mathtt{nei}, \\mathtt{sdw} = 7, \\mathtt{sdh} = 5$; 30 $X$'s and 30 $H$'s."
        )
 
 endoffile <- dev.off()
@@ -489,7 +486,7 @@ AUC_all_5 %>%
         title =
             "Varying number of environments.",
         subtitle =
-            'alltargets; $\\mathtt{sdw} = 7, \\mathtt{sdh} = 5$.'
+            "alltargets; $\\mathtt{sdw} = 7, \\mathtt{sdh} = 5$; 5 $X$'s and 5 $H$'s."
     ) +
     coord_cartesian(ylim = c(0.68, NA))
 
@@ -522,7 +519,7 @@ AUC_single_5 %>%
            title =
                "Varying number of observations per environment.",
            subtitle =
-               'singletargets; $\\mathtt{nxi} = 5, \\mathtt{noc} = \\mathtt{no}\\cdot \\mathtt{nei}, \\mathtt{sdw} = 7, \\mathtt{sdh} = 5$.'
+               "singletargets; $\\mathtt{nxi} = 5, \\mathtt{noc} = \\mathtt{no}\\cdot \\mathtt{nei}, \\mathtt{sdw} = 7, \\mathtt{sdh} = 5$; 5 $X$'s and 5 $H$'s."
        ) +
     coord_cartesian(ylim = c(0.68, NA))
 
