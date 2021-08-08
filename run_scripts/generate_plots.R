@@ -358,7 +358,7 @@ AUC_all %>%
            title =
                "Varying standard deviation of mean shifts $W$.",
            subtitle =
-               'alltargets; $\\mathtt{sdh} = 5$.'
+               "alltargets; $\\mathtt{sdh} = 5$; 30 $X$'s and 30 $H$'s."
        )
 
 endoffile <- dev.off()
@@ -382,7 +382,7 @@ AUC_all %>%
            title =
                "Varying standard deviation of hidden variables.",
            subtitle =
-               "alltargets; $\\mathtt{sdw} = 7$; 30 $X$'s and 30 $H$'s"
+               "alltargets; $\\mathtt{sdw} = 7$; 30 $X$'s and 30 $H$'s."
        )
 
 endoffile <- dev.off()
