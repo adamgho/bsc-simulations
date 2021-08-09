@@ -118,9 +118,9 @@ random_lines <- list(
                                    'a',
                                    'b')),
                 lty = 0),
-    scale_linetype_manual(name = 'random guessing',
+    scale_linetype_manual(name = '$\\mathrm{random\\ baselines}\\quad$',
                           values = c('dashed', 'dotted')),
-    scale_alpha_manual(name = 'random guessing',
+    scale_alpha_manual(name = '$\\mathrm{random\\ baselines}\\quad$',
                        values = c(0.07, 0),
                        guide = 'none'),
     guides(colour = guide_legend(override.aes = list(fill = 0.01)))
