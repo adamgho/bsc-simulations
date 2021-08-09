@@ -8,7 +8,7 @@ library(tidyverse)
 theme_set(
     theme_bw(base_size=12, base_family="") %+replace%
     theme(
-        ##panel.grid = element_blank(),
+        panel.grid = element_blank(),
         axis.ticks = element_line(size = 0.3),
         ##panel.border = element_blank(),
         axis.line = element_line(size = 0.3),
