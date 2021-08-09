@@ -315,14 +315,15 @@ sim_singletargets <- function(DAG_data,
 
   ## Simulates from the two separate sets of experiments
     
-  contril_tib <- get_control_sim()
-  contril_tib_tilde <- get_control_sim()  
+  control_tib <- get_control_sim()
+  control_tib_tilde <- get_control_sim()
     
   sim_list <- lapply(1:num_interventional_settings, interv_sim)
   sim_list_tilde <- lapply(1:num_interventional_settings, interv_sim)
 
-  sim_tib <- do.call(rbind, sim_list)
-  sim_tib_tilde <- do.call(rbind, sim_list_tilde)  
+  ## Collects all rows in one tibble
+  sim_tib <- rbind(do.call(rbind, sim_list), control_tib)
+  sim_tib_tilde <- rbind(do.call(rbind, sim_list_tilde), control_tib_tilde)
   
   # Returns relevant data
   DAG_data$dat <- list()
