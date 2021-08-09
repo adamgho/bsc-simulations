@@ -219,6 +219,7 @@ AUC_all %>%
            sd_hiddens == 5,
            n_obs_each %in% c(2, 10)) %>% 
     ggplot(aes(x = num_interv, y = AUC_mean, col = method)) +
+    geom_hline(aes(yintercept = 1), alpha = 0.1) +
     random_lines +
     geom_line() +
     geom_point(size = 0.8) +
@@ -246,6 +247,7 @@ AUC_all %>%
                          'POLS-coef',
                          'DPOLS-coef')) %>% 
     ggplot(aes(x = num_interv, y = AUC_mean, col = method)) +
+    geom_hline(aes(yintercept = 1), alpha = 0.1) +
     random_lines + 
     geom_line() +
     geom_line(aes(y = AUC_median), lty = 'dotted') +
@@ -276,6 +278,7 @@ AUC_all %>%
            sd_hiddens == 5,
            num_interv == 500) %>% 
     ggplot(aes(x = n_obs_each, y = AUC_median, col = method)) +
+    geom_hline(aes(yintercept = 1), alpha = 0.1) +
     random_lines +
     geom_line() +
     geom_point() +
@@ -346,6 +349,7 @@ AUC_all %>%
            (num_interv == 500 & n_obs_each == 10) |
            (num_interv == 2500 & n_obs_each == 2)) %>% 
     ggplot(aes(x = shift_noise_sd, y = AUC_mean, col = method)) +
+    geom_hline(aes(yintercept = 1), alpha = 0.1) +
     random_lines +
     geom_line() +
     geom_point() +
@@ -473,6 +477,7 @@ AUC_all_5 %>%
            sd_hiddens == 5,
            n_obs_each %in% c(2, 10)) %>% 
     ggplot(aes(x = num_interv, y = AUC_mean, col = method)) +
+    geom_hline(aes(yintercept = 1), alpha = 0.1) +
     geom_hline(aes(yintercept = r_AUC_mean, col = 'all-random'),
                lty = 2) +
     geom_line() +
@@ -503,6 +508,7 @@ AUC_single_5 %>%
            num_x_interv == 5,
            n_obs_control == n_obs_each * num_interv_each) %>% 
     ggplot(aes(x = num_interv_each, y = AUC_mean, col = method)) +
+    geom_hline(aes(yintercept = 1), alpha = 0.1) +
     geom_hline(aes(yintercept = r_AUC_mean, col = 'all-random'),
                lty = 2) +    
     geom_line() +
