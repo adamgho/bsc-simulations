@@ -176,11 +176,6 @@ rbind(stor1_single, stor2_single) %>%
 ## and '#b6a0ff') are from the Modus Themes by Protesilaos Stavrou (GNU GPLv3
 ## licensed, see https://protesilaos.com/modus-themes/).
 
-fct_recode(AUC_all$method,
-           OLS = 'OLS',
-           POLS = 'POLS',
-           DPOLS = 'DPOLS')
-
 main_methods <- c('OLS', 'OLS-pvals',
                   'POLS', 'POLS-pvals',
                   'DPOLS', 'DPOLS-pvals')
@@ -432,10 +427,10 @@ AUC_single %>%
                labeller = labeller(num_x_interv = label_num_x_interv,
                                    n_obs_each = label_obs)) +
        labs(
-           x = "\\texttt{no} (number of observations per environment)",
+           x = "\\texttt{nei} (number of environments per intervention target)",
            y = "Average AUC",
            title =
-               "Varying number of observations per environment.",
+               "Varying number of environments per intervention target.",
            subtitle =
                "singletargets; $\\mathtt{noc} = \\mathtt{no}\\cdot \\mathtt{nei}, \\mathtt{sdw} = 7, \\mathtt{sdh} = 5$; 30 $X$'s and 30 $H$'s."
        )
@@ -541,10 +536,10 @@ AUC_single_5 %>%
                scales = 'free_x',
                space = 'free_x') +
        labs(
-           x = "\\texttt{no} (number of environments)",
+           x = "\\texttt{nei} (number of environments per intervention target)",
            y = "Average AUC",
            title =
-               "Varying number of observations per environment.",
+               "Varying number of environments per intervention target.",
            subtitle =
                "singletargets; $\\mathtt{nxi} = 5, \\mathtt{noc} = \\mathtt{no}\\cdot \\mathtt{nei}, \\mathtt{sdw} = 7, \\mathtt{sdh} = 5$; 5 $X$'s and 5 $H$'s."
        ) +
