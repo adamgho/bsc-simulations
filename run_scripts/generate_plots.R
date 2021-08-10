@@ -105,16 +105,16 @@ random_lines <- list(
                     ## number of methods, and thus differ between the different
                     ## plots (since some plots also conain, e.g., ICP and PICP).
                     ## The solution is to only add fill for the x-values
-                    ## corresponding to OLS-coef, since this method is included
+                    ## corresponding to OLS, since this method is included
                     ## in all plots.
-                    alpha = ifelse(method == 'OLS-coef',
+                    alpha = ifelse(method == 'OLS',
                                    'a',
                                    'b')),
                 lty = 0),
     geom_ribbon(aes(ymin = r_AUC_quartile1,
                     ymax = r_AUC_quartile3,
                     ## See explanation above
-                    alpha = ifelse(method == 'OLS-coef',
+                    alpha = ifelse(method == 'OLS',
                                    'a',
                                    'b')),
                 lty = 0),
@@ -142,7 +142,11 @@ rbind(stor1_all, stor2_all, stor4_all) %>%
     rbind(rbind(stor3_all, stor5_all, stor6_all) %>%
           mutate(problem = 'Truly separate')) %>%
     filter(method != 'randomguess') %>%
-    mutate(type = nicer_type(type)) ->
+    mutate(type = nicer_type(type),
+           method = fct_recode(method,
+                               OLS = 'OLS-coef',
+                               POLS = 'POLS-coef',
+                               DPOLS = 'DPOLS-coef')) ->
     AUC_all
 
 ## singletargets AUC
@@ -158,7 +162,11 @@ rbind(stor1_single, stor2_single) %>%
     rbind(mutate(rbind(stor5_single, stor6_single),
                  problem = 'Truly separate')) %>%
     filter(method != 'randomguess') %>%
-    mutate(type = nicer_type(type)) ->
+    mutate(type = nicer_type(type),
+           method = fct_recode(method,
+                               OLS = 'OLS-coef',
+                               POLS = 'POLS-coef',
+                               DPOLS = 'DPOLS-coef')) ->
     AUC_single
 
 ## Color scales: Have to set colors manually - otherwise the methods get
@@ -168,9 +176,14 @@ rbind(stor1_single, stor2_single) %>%
 ## and '#b6a0ff') are from the Modus Themes by Protesilaos Stavrou (GNU GPLv3
 ## licensed, see https://protesilaos.com/modus-themes/).
 
-main_methods <- c('OLS-coef', 'OLS-pvals',
-                  'POLS-coef', 'POLS-pvals',
-                  'DPOLS-coef', 'DPOLS-pvals')
+fct_recode(AUC_all$method,
+           OLS = 'OLS',
+           POLS = 'POLS',
+           DPOLS = 'DPOLS')
+
+main_methods <- c('OLS', 'OLS-pvals',
+                  'POLS', 'POLS-pvals',
+                  'DPOLS', 'DPOLS-pvals')
 
 
 col_main_methods <- c('#44bc44', '#a9d566',
@@ -209,7 +222,7 @@ label_obs <- function(n_obs_each) {
 
 ## Collect AUC for methods and random baselines
 AUC_all <- left_join(AUC_all, random_collected, by = 'type') %>%
-    mutate(is_OLS_coef = method == 'OLS-coef')
+    mutate(is_OLS_coef = method == 'OLS')
 AUC_single <- left_join(AUC_single, random_collected, by = 'type')
 
 tikz(file = '~/thesis/figures/alltargets_vary_num_interv.tex', width=imw, height=imh)
@@ -243,9 +256,9 @@ AUC_all %>%
     filter(shift_noise_sd == 7,
            sd_hiddens == 5,
            n_obs_each %in% c(2, 10),
-           method %in% c('OLS-coef',
-                         'POLS-coef',
-                         'DPOLS-coef')) %>% 
+           method %in% c('OLS',
+                         'POLS',
+                         'DPOLS')) %>% 
     ggplot(aes(x = num_interv, y = AUC_mean, col = method)) +
     geom_hline(aes(yintercept = 1), alpha = 0.1) +
     random_lines + 
@@ -437,7 +450,11 @@ read_wide("local_results/nx5/AUC_alltargets.rds") %>%
     rbind(read_wide('local_results/nx5_sep/AUC_alltargets.rds') %>%
           mutate(problem = 'Truly separate')) %>%
     filter(method != 'randomguess') %>%
-    mutate(type = nicer_type(type)) ->
+    mutate(type = nicer_type(type),
+           method = fct_recode(method,
+                               OLS = 'OLS-coef',
+                               POLS = 'POLS-coef',
+                               DPOLS = 'DPOLS-coef')) ->
     AUC_all_5
 
 ## singletargets
@@ -446,7 +463,11 @@ read_wide("local_results/nx5/AUC_singletargets.rds") %>%
     rbind(read_wide('local_results/nx5_sep/AUC_singletargets.rds') %>%
           mutate(problem = 'Truly separate')) %>%
     filter(method != 'randomguess') %>%
-    mutate(type = nicer_type(type)) ->
+        mutate(type = nicer_type(type),
+               method = fct_recode(method,
+                                   OLS = 'OLS-coef',
+                                   POLS = 'POLS-coef',
+                                   DPOLS = 'DPOLS-coef')) ->
     AUC_single_5
     
 ## random
