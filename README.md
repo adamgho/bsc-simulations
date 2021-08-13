@@ -12,8 +12,8 @@ in total.
 
 ## Prerequisites
 
-You must have `R` and `bash` installed. Every script has to be run while
-standing in the root of the repository.
+You must have `R` and `bash` installed. You must stand in the root of the
+repository while running the scripts.
 
 Run `Rscript run_scripts/install_packages.R` to install the necessary R packages.
 
@@ -60,7 +60,7 @@ If you want to simulate truly separate data, then set the content of
 `echo 'tools/separate_data_tools.R' > run_tools/data_tools_file.txt`), or if you
 want to simulate permuted separate data, then set the content of
 `data_tools_file.txt` to be `tools/data_tools.R` (i.e., run `echo
-'rools/data_tools.R > run_tools/data_tools_file.txt`).
+'tools/data_tools.R' > run_tools/data_tools_file.txt`).
 
 Make sure that the directory `run_scripts/tpr_fpr_methods` contains exactly the
 methods you want to run after simulating data.
@@ -72,14 +72,14 @@ where `a` is the number of observations per environment, `b` is the number of
 environments, `c` is the standard deviation of the mean shifts, and `d` is the
 standard deviation of the hiddens. Each line in `singletargets_params.txt` must
 be of the form `e f g h i j` where `e` is the number of observations per
-environment, `f` is the number of environments, `g` is the number of X's to
+environment, `f` is the number of environments per X intervened on, `g` is the number of X's to
 intervene on, `h` is the number of control observations, `i` is the standard
 deviation of the mean shifts, and `j` is the standard deviation of the hidden variables.
 
 Go to `run_scripts/alltargets_sim.txt` respectively
 `run_scripts/singletargets_sim.txt` and set the `DAGs_to_sim` variable to
 contain the indices of the DAGs you wish to simulate from, and set the
-`DAGs_filename` to contain the file containing the list of DAGs.
+`DAGs_filename` variable to contain the file containing the list of DAGs.
 
 ### Running simulations and analyzing the data
 
@@ -137,10 +137,6 @@ is not runnable as is, since it depends heavily on the way I split the simulatio
 into portions, and where I saved them, but the source code can easily be adapted
 based on where you save your simulation results.
 
-`pval_level.R` is a rough sketch for checking the levels of the p-values -- it
-indicates that they don't hold level, but this was not explicitly included in
-the thesis.
-
 ## Overview of folders
 
 ### `run_scripts`
@@ -157,7 +153,9 @@ AUC.
 
 ### `tools`
 
-`tools` contains the main tools for simulating random SCMs, data from them, and running the methods.
+`tools` contains the main tools for simulating random SCMs, data from them, and
+running the methods. These files contain the functions called by the scripts in
+`run_scripts`.
 
 - `DAG_tools.R` for simulating random DAGs.
 - `separate_data_tools.R` for simulating truly separate data.
