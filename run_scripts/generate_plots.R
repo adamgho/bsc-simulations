@@ -220,6 +220,98 @@ AUC_all <- left_join(AUC_all, random_collected, by = 'type') %>%
     mutate(is_OLS_coef = method == 'OLS')
 AUC_single <- left_join(AUC_single, random_collected, by = 'type')
 
+## Plots for presentation
+
+## Lines and ribbons to add to all ggplots
+slides_random_lines <- list(
+    geom_hline(aes(yintercept = r_AUC_mean,
+                   lty = 'all-random')),
+    geom_hline(aes(yintercept = rp_AUC_mean,
+                   lty = 'random-after-parents')),
+    geom_ribbon(aes(ymin = rp_AUC_quartile1,
+                    ymax = rp_AUC_quartile3,
+                    ## Hack to get it to only use x-values once. Otherwise the
+                    ## x-values for each method would add another layer of fill,
+                    ## meaning that the alpha would effectively depend on the
+                    ## number of methods, and thus differ between the different
+                    ## plots (since some plots also conain, e.g., ICP and PICP).
+                    ## The solution is to only add fill for the x-values
+                    ## corresponding to OLS, since this method is included
+                    ## in all plots.
+                    alpha = ifelse(method == 'OLS',
+                                   'a',
+                                   'b')),
+                lty = 0),
+    geom_ribbon(aes(ymin = r_AUC_quartile1,
+                    ymax = r_AUC_quartile3,
+                    ## See explanation above
+                    alpha = ifelse(method == 'OLS',
+                                   'a',
+                                   'b')),
+                lty = 0),
+    scale_linetype_manual(name = 'random baselines',
+                          values = c('dashed', 'dotted')),
+    scale_alpha_manual(name = 'random baseline',
+                       values = c(0.07, 0),
+                       guide = 'none'),
+    guides(colour = guide_legend(override.aes = list(fill = 0.01)))
+)
+
+slides_label_obs <- function(n_obs_each) {
+    sprintf('%s obs. per env.', n_obs_each)
+}
+
+
+slides_w <- 8
+slides_h <- 6
+
+## tikz(file = '~/presentation/figures/alltargets_vary_num_interv.tex', width=slides_w, height=slides_h)
+
+AUC_all %>% 
+    filter(shift_noise_sd == 7,
+           sd_hiddens == 5,
+           n_obs_each %in% c(2, 10)) %>% 
+    ggplot(aes(x = num_interv, y = AUC_mean, col = method)) +
+    geom_hline(aes(yintercept = 1), alpha = 0.2, size = 0.3) +
+    slides_random_lines +
+    geom_line() +
+    geom_point(size = 0.8) +
+    facet_grid(n_obs_each + type ~ problem,
+               labeller = labeller(n_obs_each = slides_label_obs)) +
+    scale_main +
+    labs(x = "Number of environments", y = "Average AUC",
+         title = "alltargets; mean shift sd = 7, hiddens sd = 5; 30 X and 30 H.") +
+    coord_cartesian(ylim = c(0.5, NA)) +
+    theme(legend.position = 'right')
+
+ggsave('~/presentation/figures/alltargets_vary_num_interv.pdf', width=slides_w, height=slides_h)
+
+## endoffile <- dev.off()
+
+AUC_all %>% 
+    filter(shift_noise_sd == 7,
+           sd_hiddens == 5,
+           num_interv == 500) %>% 
+    ggplot(aes(x = n_obs_each, y = AUC_median, col = method)) +
+    geom_hline(aes(yintercept = 1), alpha = 0.2, size = 0.3) +
+    slides_random_lines +
+    geom_line() +
+    geom_point() +
+    facet_grid(type ~ problem) +
+    scale_main +
+    labs(
+        x = "Number of observations per environment",
+        y = "Average AUC",
+        title =
+            "alltargets; number of environments = 500, mean shift sd = 7, hiddens sd = 5; 30 X and 30 H."
+    ) +
+    coord_cartesian(ylim = c(0.5, NA)) +
+    theme(legend.position = 'right')
+
+ggsave('~/presentation/figures/alltargets_vary_no.pdf', width=slides_w, height=slides_h)
+
+## Plots for thesis
+
 tikz(file = '~/thesis/figures/alltargets_vary_num_interv.tex', width=imw, height=imh)
 
 AUC_all %>% 
@@ -245,7 +337,8 @@ endoffile <- dev.off()
 ## The following plot contains ribbons giving the first and third quartiles of
 ## the AUC for each method
 
-tikz(file = '~/thesis/figures/alltargets_vary_num_interv_ribbons.tex', width=imw, height=imh)
+tikz(file = '~/thesis/figures/alltargets_vary_num_interv_ribbons.tex', width=imw, height=
+                                                                                      imh)
 
 AUC_all %>% 
     filter(shift_noise_sd == 7,
