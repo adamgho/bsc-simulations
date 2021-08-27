@@ -263,7 +263,7 @@ slides_label_obs <- function(n_obs_each) {
 
 
 slides_w <- 8
-slides_h <- 6
+slides_h <- 5.5
 
 ## tikz(file = '~/presentation/figures/alltargets_vary_num_interv.tex', width=slides_w, height=slides_h)
 
