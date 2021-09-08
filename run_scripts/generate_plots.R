@@ -279,8 +279,7 @@ AUC_all %>%
     facet_grid(n_obs_each + type ~ problem,
                labeller = labeller(n_obs_each = slides_label_obs)) +
     scale_main +
-    labs(x = "Number of environments", y = "Average AUC",
-         title = "alltargets; mean shift sd = 7, hiddens sd = 5; 30 X and 30 H.") +
+    labs(x = "Number of environments", y = "Average AUC") +
     coord_cartesian(ylim = c(0.5, NA)) +
     theme(legend.position = 'right')
 
@@ -301,10 +300,7 @@ AUC_all %>%
     scale_main +
     labs(
         x = "Number of observations per environment",
-        y = "Average AUC",
-        title =
-            "alltargets; number of environments = 500, mean shift sd = 7, hiddens sd = 5; 30 X and 30 H."
-    ) +
+        y = "Average AUC") +
     coord_cartesian(ylim = c(0.5, NA)) +
     theme(legend.position = 'right')
 
