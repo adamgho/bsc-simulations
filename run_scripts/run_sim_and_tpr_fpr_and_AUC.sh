@@ -127,7 +127,7 @@ done
 # Waits until all tpr_fpr scripts have finished.
 wait "${PIDS2[@]}"
 # Then processes the tpr_fpr files to produce ROC_points and AUC files.  This
-# doesn't alway work, so be prepared to run them manually (it takes a couple of
+# doesn't always work, so be prepared to run them manually (it takes a couple of
 # minutes at most).
 Rscript run_scripts/alltargets_AUC.R > run_scripts/.output_alltargets_AUC.txt &
 Rscript run_scripts/singletargets_AUC.R > run_scripts/.output_singletargets_AUC.txt &
