@@ -1,6 +1,9 @@
 # Causal discovery from interventional data
 
-This repository contains code used for simulations for my BSc thesis.
+This repository contains code used for simulations for my BSc thesis. You can
+read more about the thesis
+[[https://adamgorm.dk/posts/2021/09/08/bsc-thesis-causal-discovery-from-interventional-data/][on
+my website]].
 
 The sections below give detailed instruction on how to use the scripts to
 simulate (and process results) from any alltargets or singletargets setting
